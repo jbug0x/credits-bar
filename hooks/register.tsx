@@ -25,7 +25,8 @@ const TICK_MS = 30_000
 const MAX_TURNS = 8
 
 const snapshot = atom({ plugin: 'credits-bar', key: 'snapshot' } as const, null)
-const isHidden = atom({ plugin: 'credits-bar', key: 'isHidden' } as const, false)
+// 'auto': the band shows only while the panel is not seated; 'on': always; 'off': never.
+const bandMode = atom({ plugin: 'credits-bar', key: 'bandMode' } as const, 'auto')
 const turns = atom({ plugin: 'credits-bar', key: 'turns' } as const, [])
 const tokens = atom({ plugin: 'credits-bar', key: 'tokens' } as const, { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 })
 const history = atom({ plugin: 'credits-bar', key: 'history' } as const, {})
@@ -44,10 +45,14 @@ export const register: Register = (on, options) => {
   let pending = 0
 
   on('session.start', async ($, e, next) => {
-    await update($, isHidden, () => false)
+    await update($, bandMode, () => 'auto')
+    await $.command.register({
+      name: 'credits-panel',
+      description: 'Open or close the usage side panel'
+    })
     await $.command.register({
       name: 'credits-bar',
-      description: 'Show or hide the usage panel (and its one-line fallback)'
+      description: 'Show or hide the one-line usage bar above the prompt'
     })
 
     const stored = await $.store.get('history')
@@ -62,21 +67,25 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  // /credits-bar: if anything is showing, hide it all; otherwise bring it back.
-  on('command.run', { command: 'credits-bar' }, async $ => {
-    const isShowing = (await isPaneUp($)) || !(await read($, isHidden))
-
-    if (isShowing) {
-      await update($, isHidden, () => true)
+  // /credits-panel: open the side panel (at any width when asked), or close it.
+  on('command.run', { command: 'credits-panel' }, async $ => {
+    if (await isPaneUp($)) {
       await $.ui.close({ id: PANE })
 
-      return { text: 'Credits hidden. Run /credits-bar to show it again.' }
+      return { text: 'Credits panel closed.' }
     }
 
-    await update($, isHidden, () => false)
     const opened = await $.ui.open({ id: PANE, title: 'Credits' })
 
-    return { text: opened.isPlaced ? 'Credits panel opened.' : 'Credits shown in the band above the prompt.' }
+    return { text: opened.isPlaced ? 'Credits panel opened.' : 'The panel could not be placed here.' }
+  })
+
+  // /credits-bar: show the one-line bar above the prompt, or hide it.
+  on('command.run', { command: 'credits-bar' }, async $ => {
+    const isShowing = (await read($, bandMode)) === 'on' || ((await read($, bandMode)) === 'auto' && !(await isPaneUp($)))
+    await update($, bandMode, () => (isShowing ? 'off' : 'on'))
+
+    return { text: isShowing ? 'Credits bar hidden. Run /credits-bar to show it again.' : 'Credits bar shown.' }
   })
 
   // After each response: refresh the numbers, record spend, and raise toasts.
@@ -238,11 +247,14 @@ export const register: Register = (on, options) => {
     )
   })
 
-  // The one-line fallback: only while the panel is not seated (narrow window or closed).
+  // The one-line bar: the fallback while the panel is not seated, or always with /credits-bar.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     const snap = await read($, snapshot)
 
-    if (e.props.hasSurvey || snap === null || (await read($, isHidden)) || (await isPaneUp($))) {
+    const mode = await read($, bandMode)
+    const isWanted = mode === 'on' || (mode === 'auto' && !(await isPaneUp($)))
+
+    if (e.props.hasSurvey || snap === null || !isWanted) {
       return next(e)
     }
 
@@ -273,7 +285,7 @@ export const register: Register = (on, options) => {
           <Text color={paint(levelUsed(snap.contextPercent))}>ctx {snap.contextPercent}% </Text>
         ) : null}
         {snap.usd !== null ? <Text dimColor>${snap.usd.toFixed(2)} </Text> : null}
-        <Button key="hide" label="Hide (/credits-bar to restore)" onPress={() => update($, isHidden, () => true)} />
+        <Button key="hide" label="Hide (/credits-bar to restore)" onPress={() => update($, bandMode, () => 'off')} />
       </Box>
     )
   })

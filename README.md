@@ -16,7 +16,8 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 - Narrow window: a one-line band above the prompt stands in
   (`5h ██████░░░░ 29% left  7d ████░░░░░░ 22% left  ctx 16%  $1.42`).
 - Short panel: switches to a compact view (`compact: auto`).
-- `/credits-bar` hides everything or brings it back (the panel opens at any width when you ask).
+- `/credits-panel` opens or closes the side panel (it opens at any width when you ask).
+- `/credits-bar` shows or hides the one-line bar above the prompt (it can be shown even with the panel open).
 
 **Settings** (`userConfig`, shown in the plugin config menu): alert thresholds, compact mode,
 colors (`default`, `colorblind`, `mono`) and which blocks to show.

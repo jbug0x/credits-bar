@@ -14,7 +14,7 @@ declare module 'claude-code' {
   interface PluginState {
     'credits-bar': {
       snapshot: Snapshot | null
-      isHidden: boolean
+      bandMode: 'auto' | 'on' | 'off'
       turns: number[]
       tokens: TokenTotals
       history: History
