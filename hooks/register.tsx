@@ -280,13 +280,13 @@ export const register: Register = (on, options) => {
     )
 
     if (snap === null || !isWanted) {
-      return <Box>{chip}</Box>
+      return <Box justifyContent="flex-end">{chip}</Box>
     }
 
+    // The bar's readings on the left, the icon button pushed to the right edge.
     return (
-      <Box>
-        {chip}
-        <Text> </Text>
+      <Box justifyContent="space-between">
+        <Box>
         {snap.limits.length === 0 ? (
           <Text dimColor>Credits: no usage limit reported yet </Text>
         ) : (
@@ -308,6 +308,8 @@ export const register: Register = (on, options) => {
         ) : null}
         {snap.usd !== null ? <Text dimColor>${snap.usd.toFixed(2)} </Text> : null}
         <Button key="hide" label="Hide (/credits-bar to restore)" onPress={() => update($, bandMode, () => 'off')} />
+        </Box>
+        {chip}
       </Box>
     )
   })
