@@ -1,8 +1,60 @@
 {
   "name": "credits-bar",
-  "version": "0.1.0",
-  "description": "A live bar above the prompt showing how much of your Claude usage limits is left, and what the session has cost.",
+  "version": "0.2.0",
+  "description": "A live usage panel for Claude Code: limit bars, pace warning, context breakdown, tokens, cost per reply and a 7-day history.",
   "license": "MIT",
   "author": { "name": "jbug0x" },
-  "types": "./types/index.d.ts"
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "alertLow": {
+      "type": "number",
+      "title": "First alert (%)",
+      "description": "Toast when a limit passes this percentage used.",
+      "default": 80
+    },
+    "alertHigh": {
+      "type": "number",
+      "title": "Second alert (%)",
+      "description": "Toast when a limit passes this percentage used.",
+      "default": 95
+    },
+    "compact": {
+      "type": "string",
+      "title": "Compact panel",
+      "description": "auto: compact when the panel is short; always; never.",
+      "options": ["auto", "always", "never"],
+      "default": "auto"
+    },
+    "palette": {
+      "type": "string",
+      "title": "Colors",
+      "description": "default (green/yellow/red), colorblind (blue/yellow/magenta) or mono (no colors).",
+      "options": ["default", "colorblind", "mono"],
+      "default": "default"
+    },
+    "showHistory": {
+      "type": "boolean",
+      "title": "Show 7-day history",
+      "description": "Daily spend and peak usage of the last 7 days.",
+      "default": true
+    },
+    "showBreakdown": {
+      "type": "boolean",
+      "title": "Show context breakdown",
+      "description": "What is filling the context window.",
+      "default": true
+    },
+    "showTokens": {
+      "type": "boolean",
+      "title": "Show session tokens",
+      "description": "Input, output and prompt-cache hit rate for the session.",
+      "default": true
+    },
+    "showTurns": {
+      "type": "boolean",
+      "title": "Show cost per reply",
+      "description": "Cost of the last reply and a mini chart of recent ones.",
+      "default": true
+    }
+  }
 }

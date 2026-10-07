@@ -1,5 +1,6 @@
 {
   "name": "credits-bar-marketplace",
+  "description": "Claude Code mods by jbug0x",
   "owner": { "name": "jbug0x" },
   "plugins": [{ "name": "credits-bar", "source": "./" }]
 }

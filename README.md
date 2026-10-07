@@ -1,17 +1,25 @@
 # credits-bar
 
-A small open-source mod for Claude Code that shows your **usage at a glance in a side panel**:
-how much of your 5-hour and 7-day limits is left (the bars drain as you spend), when each
-one resets, a **pace warning** when your current burn rate would empty a window before it
-resets (`out in 40m`), the **context window fill** and what the session has cost. A **toast**
-fires the first time a limit passes 80% and 95%.
+A small open-source mod for Claude Code that keeps your **usage in a side panel**.
 
-- **Wide window (144+ columns):** the panel opens by itself at session start.
-- **Narrow window:** a one-line band above the prompt stands in
+**In the panel**
+- **Limit bars** (5-hour and 7-day) that drain as you spend, with a live "resets in" clock.
+- **Pace warning** when your burn rate would empty a window before it resets (`! out in 40m`).
+- **Context window**: fill and what is filling it (messages, MCP tools, skills...).
+- **Session tokens**: input, output and prompt-cache hit rate.
+- **Cost**: session total, cost of the last reply and a mini chart of recent replies.
+- **7-day history**: daily spend and peak usage, kept across sessions.
+- **Toasts** at 80% / 95% (configurable) and when a window goes on pace to run dry.
+
+**Layout**
+- Wide window (144+ columns): the panel opens by itself at session start.
+- Narrow window: a one-line band above the prompt stands in
   (`5h ██████░░░░ 29% left  7d ████░░░░░░ 22% left  ctx 16%  $1.42`).
-- **`/credits-bar`** hides everything, or brings it back (the panel opens at any width when you ask).
+- Short panel: switches to a compact view (`compact: auto`).
+- `/credits-bar` hides everything or brings it back (the panel opens at any width when you ask).
 
-Colors: green above 50% left, yellow above 20%, red below.
+**Settings** (`userConfig`, shown in the plugin config menu): alert thresholds, compact mode,
+colors (`default`, `colorblind`, `mono`) and which blocks to show.
 
 ## Install
 
@@ -30,10 +38,9 @@ Or, for development: `claude --plugin-dir ./credits-bar`.
 
 ## Ideas / roadmap
 
-- Daily/weekly spend history stored with `$.store`
-- Configurable colors and alert thresholds (`userConfig`)
-- Compact one-line mode
-- Cost of the last response
-- A `/credits` command with a detailed pane
+- Per-model usage breakdown
+- Export history as CSV
+- Sound alerts
+- More languages for the labels
 
 Contributions welcome. MIT licensed.
