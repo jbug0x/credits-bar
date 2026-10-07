@@ -1,0 +1,5 @@
+{
+  "name": "credits-bar-marketplace",
+  "owner": { "name": "jbug0x" },
+  "plugins": [{ "name": "credits-bar", "source": "./" }]
+}

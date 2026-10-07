@@ -1,0 +1,8 @@
+{
+  "name": "credits-bar",
+  "version": "0.1.0",
+  "description": "A live bar above the prompt showing how much of your Claude usage limits is left, and what the session has cost.",
+  "license": "MIT",
+  "author": { "name": "jbug0x" },
+  "types": "./types/index.d.ts"
+}
