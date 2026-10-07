@@ -9,6 +9,8 @@ response and when you send a prompt.
 5h ████████████░░░░░░░░ 62% left resets in 3h   7d ██████████████████░░ 91% left resets in 5d   session $1.42  [Hide]
 ```
 
+Hide it with the button or `/credits-bar`; it comes back on the next session or when you run `/credits-bar` again.
+
 Colors: green above 50% left, yellow above 20%, red below.
 
 ## Install

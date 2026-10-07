@@ -38,6 +38,24 @@ function timeUntil(iso?: string): string {
 }
 
 export const register: Register = on => {
+  // The bar always starts visible; /credits-bar toggles it (so "Hide" is never permanent).
+  on('session.start', async ($, e, next) => {
+    await update($, isHidden, () => false)
+    await $.command.register({
+      name: 'credits-bar',
+      description: 'Show or hide the usage bar above the prompt'
+    })
+
+    return next(e)
+  })
+
+  on('command.run', { command: 'credits-bar' }, async $ => {
+    const nowHidden = !(await read($, isHidden))
+    await update($, isHidden, () => nowHidden)
+
+    return { text: nowHidden ? 'Credits bar hidden. Run /credits-bar to show it again.' : 'Credits bar shown.' }
+  })
+
   // Refresh the numbers every time the engine measures usage (after each response).
   on('session.measure', async ($, e, next) => {
     const value: Snapshot = {
@@ -88,7 +106,7 @@ export const register: Register = on => {
           })
         )}
         {snap.usd !== null ? <Text dimColor>session ${snap.usd.toFixed(2)} </Text> : null}
-        <Button key="hide" label="Hide" onPress={() => update($, isHidden, () => true)} />
+        <Button key="hide" label="Hide (/credits-bar to restore)" onPress={() => update($, isHidden, () => true)} />
       </Box>
     )
   })
