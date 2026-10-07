@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
-import type { Snapshot } from '../types'
+import { newAlerts, paceNote, toSnapshot } from './usage'
 
 const BAR_WIDTH = 20
 
@@ -28,6 +28,13 @@ function colorFor(percentLeft: number): 'green' | 'yellow' | 'red' {
   return 'red'
 }
 
+function contextColor(percent: number): 'green' | 'yellow' | 'red' {
+  if (percent < 50) return 'green'
+  if (percent < 80) return 'yellow'
+
+  return 'red'
+}
+
 function timeUntil(iso?: string): string {
   if (!iso) return ''
   const minutes = Math.max(0, Math.round((Date.parse(iso) - Date.now()) / 60000))
@@ -38,6 +45,9 @@ function timeUntil(iso?: string): string {
 }
 
 export const register: Register = on => {
+  // Thresholds already toasted this process (keyed by limit, reset time and threshold).
+  let seen: ReadonlySet<string> = new Set()
+
   // The bar always starts visible; /credits-bar toggles it (so "Hide" is never permanent).
   on('session.start', async ($, e, next) => {
     await update($, isHidden, () => false)
@@ -56,24 +66,22 @@ export const register: Register = on => {
     return { text: nowHidden ? 'Credits bar hidden. Run /credits-bar to show it again.' : 'Credits bar shown.' }
   })
 
-  // Refresh the numbers every time the engine measures usage (after each response).
+  // Refresh the numbers every time the engine measures usage (after each response),
+  // and warn once when a limit crosses 80% / 95%.
   on('session.measure', async ($, e, next) => {
-    const value: Snapshot = {
-      limits: e.rateLimits.map(l => ({ kind: l.kind, percentUsed: l.percentUsed, resetsAt: l.resetsAt })),
-      usd: e.cost?.usd ?? null
-    }
+    const value = toSnapshot(e)
     await update($, snapshot, () => value)
+
+    const alerts = newAlerts(value.limits, seen)
+    seen = alerts.seen
+    for (const message of alerts.messages) $.ui.toast(message)
 
     return next(e)
   })
 
   // Also read once when the prompt is sent, so the bar is there from the first turn.
   on('prompt.submit', async ($, e, next) => {
-    const usage = await $.session.usage()
-    const value: Snapshot = {
-      limits: usage.rateLimits.map(l => ({ kind: l.kind, percentUsed: l.percentUsed, resetsAt: l.resetsAt })),
-      usd: usage.cost?.usd ?? null
-    }
+    const value = toSnapshot(await $.session.usage())
     await update($, snapshot, () => value)
 
     return next(e)
@@ -87,6 +95,7 @@ export const register: Register = on => {
     }
 
     const { Box, Text, Button } = $.ui.resolve(e)
+    const now = Date.now()
 
     return (
       <Box>
@@ -95,16 +104,21 @@ export const register: Register = on => {
         ) : (
           snap.limits.map(l => {
             const left = Math.round((100 - l.percentUsed) * 10) / 10
+            const pace = paceNote(l, now)
 
             return (
               <Text key={l.kind} color={colorFor(left)}>
                 {LABELS[l.kind] ?? l.kind} {drawBar(left)} {left}% left
                 <Text dimColor>{timeUntil(l.resetsAt)}</Text>
+                {pace ? <Text color="red"> ({pace})</Text> : null}
                 {'  '}
               </Text>
             )
           })
         )}
+        {snap.contextPercent !== null ? (
+          <Text color={contextColor(snap.contextPercent)}>ctx {snap.contextPercent}% </Text>
+        ) : null}
         {snap.usd !== null ? <Text dimColor>session ${snap.usd.toFixed(2)} </Text> : null}
         <Button key="hide" label="Hide (/credits-bar to restore)" onPress={() => update($, isHidden, () => true)} />
       </Box>

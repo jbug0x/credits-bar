@@ -11,6 +11,10 @@ response and when you send a prompt.
 
 Hide it with the button or `/credits-bar`; it comes back on the next session or when you run `/credits-bar` again.
 
+Also shown: **context window fill** (`ctx 16%`), a **pace warning** when your current burn
+rate would empty a window before it resets (`(out in 40m)`), and a **toast** the first time a
+limit passes 80% and 95%.
+
 Colors: green above 50% left, yellow above 20%, red below.
 
 ## Install
@@ -30,9 +34,10 @@ Or, for development: `claude --plugin-dir ./credits-bar`.
 
 ## Ideas / roadmap
 
-- Show tokens and context window fill
 - Daily/weekly spend history stored with `$.store`
-- Configurable colors, thresholds and warning toasts
+- Configurable colors and alert thresholds (`userConfig`)
+- Compact one-line mode
+- Cost of the last response
 - A `/credits` command with a detailed pane
 
 Contributions welcome. MIT licensed.
