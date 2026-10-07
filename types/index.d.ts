@@ -7,7 +7,8 @@ export type Snapshot = {
   categories: Category[]
 }
 export type TokenTotals = { input: number; output: number; cacheRead: number; cacheWrite: number }
-export type DayRecord = { usd: number; peak: number }
+export type DayRecord = { usd: number; peak: number; projects?: Record<string, number> }
+export type ModelTotals = Record<string, { usd: number; output: number }>
 export type History = Record<string, DayRecord>
 
 declare module 'claude-code' {
@@ -19,6 +20,7 @@ declare module 'claude-code' {
       tokens: TokenTotals
       history: History
       tick: number
+      models: ModelTotals
     }
   }
 }

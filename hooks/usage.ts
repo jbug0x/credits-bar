@@ -1,5 +1,7 @@
 // Pure helpers (no engine calls) so they can be unit-tested.
 import type { Category, DayRecord, History, Limit, Snapshot, TokenTotals } from '../types'
+import { STRINGS } from './strings'
+import type { Lang } from './strings'
 
 export const WINDOW_MS: Record<string, number> = {
   five_hour: 5 * 60 * 60 * 1000,
@@ -15,6 +17,11 @@ export type Options = {
   showTurns: boolean
   compact: 'auto' | 'always' | 'never'
   palette: 'default' | 'colorblind' | 'mono'
+  language: Lang
+  dailyGoal: number
+  sessionSummary: boolean
+  showProjects: boolean
+  sound: boolean
 }
 
 export const DEFAULT_OPTIONS: Options = {
@@ -25,7 +32,12 @@ export const DEFAULT_OPTIONS: Options = {
   showTokens: true,
   showTurns: true,
   compact: 'auto',
-  palette: 'default'
+  palette: 'default',
+  language: 'en',
+  dailyGoal: 0,
+  sessionSummary: true,
+  showProjects: true,
+  sound: false
 }
 
 // `userConfig` values arrive loosely typed (numbers may arrive as strings): clamp and default each.
@@ -48,7 +60,12 @@ export function resolveOptions(raw: Record<string, unknown> | undefined): Option
     showTokens: bool(o.showTokens, true),
     showTurns: bool(o.showTurns, true),
     compact: pick(o.compact, ['auto', 'always', 'never'] as const, 'auto'),
-    palette: pick(o.palette, ['default', 'colorblind', 'mono'] as const, 'default')
+    palette: pick(o.palette, ['default', 'colorblind', 'mono'] as const, 'default'),
+    language: pick(o.language, ['en', 'pt'] as const, 'en'),
+    dailyGoal: Math.max(0, num(o.dailyGoal, 0)),
+    sessionSummary: bool(o.sessionSummary, true),
+    showProjects: bool(o.showProjects, true),
+    sound: bool(o.sound, false)
   }
 }
 
@@ -87,7 +104,7 @@ export function formatTokens(n: number): string {
 
 // "Out in 40m": if the current burn rate holds, when does this window run dry?
 // Returns null when there is not enough signal or the window will last until reset.
-export function paceNote(limit: Limit, now: number): string | null {
+export function paceNote(limit: Limit, now: number, lang: Lang = 'en'): string | null {
   const windowMs = WINDOW_MS[limit.kind]
   if (!windowMs || !limit.resetsAt || limit.percentUsed < 10) return null
 
@@ -98,7 +115,7 @@ export function paceNote(limit: Limit, now: number): string | null {
   const msToEmpty = (elapsedMs * (100 - limit.percentUsed)) / limit.percentUsed
   if (msToEmpty >= remainingMs) return null
 
-  return `out in ${formatDuration(msToEmpty)}`
+  return STRINGS[lang].outIn(formatDuration(msToEmpty))
 }
 
 export function formatDuration(ms: number): string {
@@ -109,12 +126,12 @@ export function formatDuration(ms: number): string {
   return `${Math.round(minutes / (24 * 60))}d`
 }
 
-export function resetsIn(iso: string | undefined, now: number): string {
+export function resetsIn(iso: string | undefined, now: number, lang: Lang = 'en'): string {
   if (!iso) return ''
   const ms = Date.parse(iso) - now
-  if (!(ms > 0)) return 'resetting'
+  if (!(ms > 0)) return STRINGS[lang].resetting
 
-  return `resets in ${formatDuration(ms)}`
+  return STRINGS[lang].resetsIn(formatDuration(ms))
 }
 
 export function labelFor(kind: string): string {
@@ -126,9 +143,10 @@ export function labelFor(kind: string): string {
 export function newAlerts(
   limits: Limit[],
   seen: ReadonlySet<string>,
-  opts: Pick<Options, 'alertLow' | 'alertHigh'> = DEFAULT_OPTIONS,
+  opts: Pick<Options, 'alertLow' | 'alertHigh'> & { language?: Lang } = DEFAULT_OPTIONS,
   now = 0
 ): { messages: string[]; seen: Set<string> } {
+  const str = STRINGS[opts.language ?? 'en']
   const next = new Set(seen)
   const messages: string[] = []
 
@@ -139,15 +157,15 @@ export function newAlerts(
       const key = `${l.kind}:${l.resetsAt ?? ''}:${t}`
       if (l.percentUsed >= t && !next.has(key)) {
         next.add(key)
-        messages.push(`${label} limit ${Math.floor(l.percentUsed)}% used`)
+        messages.push(str.limitUsed(label, Math.floor(l.percentUsed)))
       }
     }
 
-    const pace = now ? paceNote(l, now) : null
+    const pace = now ? paceNote(l, now, opts.language ?? 'en') : null
     const paceKey = `pace:${l.kind}:${l.resetsAt ?? ''}`
     if (pace && !next.has(paceKey)) {
       next.add(paceKey)
-      messages.push(`${label} window ${pace}, before it resets`)
+      messages.push(str.paceWarn(label, pace))
     }
   }
 
@@ -164,12 +182,19 @@ export function dayKey(ms: number): string {
 }
 
 // Adds `usd` spent and the highest limit percentage seen to today's record, pruning old days.
-export function recordDay(history: History, ms: number, usd: number, peak: number): History {
+export function recordDay(history: History, ms: number, usd: number, peak: number, project?: string): History {
   const key = dayKey(ms)
   const prev: DayRecord = history[key] ?? { usd: 0, peak: 0 }
+  const add = Math.max(0, usd)
+  const projects = { ...(prev.projects ?? {}) }
+  if (project && add > 0) projects[project] = (projects[project] ?? 0) + add
   const next: History = {
     ...history,
-    [key]: { usd: prev.usd + Math.max(0, usd), peak: Math.max(prev.peak, peak) }
+    [key]: {
+      usd: prev.usd + add,
+      peak: Math.max(prev.peak, peak),
+      ...(Object.keys(projects).length > 0 ? { projects } : {})
+    }
   }
   const keep = Object.keys(next).sort().slice(-HISTORY_DAYS)
 
@@ -245,4 +270,83 @@ export function drawBar(percentLeft: number, width: number): string {
   const filled = Math.round((Math.max(0, Math.min(100, percentLeft)) / 100) * width)
 
   return '█'.repeat(filled) + '░'.repeat(width - filled)
+}
+
+// --- projects, models, goal, chart, csv ---
+
+// The folder's own name: "C:\code\my-app" and "/home/me/my-app" both give "my-app".
+export function projectName(cwd: string): string {
+  const parts = cwd.split(/[\\/]+/).filter(Boolean)
+
+  return parts[parts.length - 1] ?? cwd
+}
+
+// Spend per project over the last `days` days, biggest first.
+export function projectTotals(history: History, ms: number, days = 7, n = 4): [string, number][] {
+  const totals: Record<string, number> = {}
+  for (const d of lastDays(history, ms, days)) {
+    for (const [name, usd] of Object.entries(history[d.key]?.projects ?? {})) totals[name] = (totals[name] ?? 0) + usd
+  }
+
+  return Object.entries(totals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, n)
+}
+
+// "claude-opus-4-5-20251001" -> "opus-4-5"
+export function shortModel(model: string): string {
+  return model.replace(/^claude-/, '').replace(/-\d{8}$/, '')
+}
+
+export function money(usd: number): string {
+  return `$${usd.toFixed(2)}`
+}
+
+// How far along the daily goal is, 0 to 100+; null when no goal is set.
+export function goalPercent(spent: number, goal: number): number | null {
+  return goal > 0 ? Math.round((spent / goal) * 100) : null
+}
+
+// A vertical bar chart `height` rows tall, one column pair per value; rows run top to bottom.
+export function barChart(values: number[], height: number): string[] {
+  const max = Math.max(...values, 0)
+  const rows: string[] = []
+
+  for (let r = height - 1; r >= 0; r--) {
+    let line = ''
+    for (const v of values) {
+      const units = max > 0 ? Math.round((v / max) * height * 8) : 0
+      const fill = Math.max(0, Math.min(8, units - r * 8))
+      const cell = fill === 0 ? ' ' : BLOCKS.charAt(fill - 1)
+      line += cell + cell
+    }
+    rows.push(line.replace(/\s+$/, ''))
+  }
+
+  return rows
+}
+
+// The spend history as CSV: one row per day and project (a "-" project when none was recorded).
+export function historyCsv(history: History): { text: string; rows: number } {
+  const lines = ['date,project,usd,peak_percent']
+  let rows = 0
+
+  for (const date of Object.keys(history).sort()) {
+    const rec = history[date] as DayRecord
+    const entries = Object.entries(rec.projects ?? {})
+    const named = entries.reduce((sum, [, v]) => sum + v, 0)
+    const csvName = (n: string) => (/[",\n]/.test(n) ? `"${n.replace(/"/g, '""')}"` : n)
+
+    for (const [name, usd] of entries) {
+      lines.push(`${date},${csvName(name)},${usd.toFixed(4)},${Math.round(rec.peak)}`)
+      rows++
+    }
+    const rest = rec.usd - named
+    if (entries.length === 0 || rest > 0.00005) {
+      lines.push(`${date},-,${Math.max(0, rest).toFixed(4)},${Math.round(rec.peak)}`)
+      rows++
+    }
+  }
+
+  return { text: lines.join('\n') + '\n', rows }
 }

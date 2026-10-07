@@ -2,6 +2,13 @@ import { expect, test } from 'claude-code/testing'
 
 import {
   addTokens,
+  barChart,
+  goalPercent,
+  historyCsv,
+  money,
+  projectName,
+  projectTotals,
+  shortModel,
   cacheHitPercent,
   dayKey,
   formatTokens,
@@ -105,4 +112,63 @@ test('categories, tokens, cache hit and palette', async () => {
   expect(tint('bad', 'mono')).toBeUndefined()
   expect(resetsIn(new Date(NOW + 48 * 60000).toISOString(), NOW)).toBe('resets in 48m')
   expect(resetsIn(new Date(NOW - 1000).toISOString(), NOW)).toBe('resetting')
+})
+
+test('project names, per-project totals and the CSV export', async () => {
+  expect(projectName('C:\\code\\my-app')).toBe('my-app')
+  expect(projectName('/home/me/my-app/')).toBe('my-app')
+
+  let h = recordDay({}, NOW, 2, 40, 'api')
+  h = recordDay(h, NOW, 1, 50, 'web')
+  h = recordDay(h, NOW, 0.5, 10, 'api')
+  expect(h[dayKey(NOW)]).toEqual({ usd: 3.5, peak: 50, projects: { api: 2.5, web: 1 } })
+  expect(projectTotals(h, NOW)).toEqual([
+    ['api', 2.5],
+    ['web', 1]
+  ])
+
+  const csv = historyCsv(h)
+  expect(csv.rows).toBe(2)
+  expect(csv.text.split('\n')).toEqual([
+    'date,project,usd,peak_percent',
+    `${dayKey(NOW)},api,2.5000,50`,
+    `${dayKey(NOW)},web,1.0000,50`,
+    ''
+  ])
+
+  // spend recorded without a project still gets a row; names with commas are quoted
+  const legacy = { '2026-10-01': { usd: 1.25, peak: 33 }, '2026-10-02': { usd: 1, peak: 5, projects: { 'a,b': 1 } } }
+  expect(historyCsv(legacy).text).toContain('2026-10-01,-,1.2500,33')
+  expect(historyCsv(legacy).text).toContain('2026-10-02,"a,b",1.0000,5')
+})
+
+test('goal percent, model names, money and the bar chart', async () => {
+  expect(goalPercent(2.5, 5)).toBe(50)
+  expect(goalPercent(7.5, 5)).toBe(150)
+  expect(goalPercent(1, 0)).toBeNull()
+  expect(shortModel('claude-opus-4-5-20251001')).toBe('opus-4-5')
+  expect(shortModel('claude-sonnet-5-5')).toBe('sonnet-5-5')
+  expect(money(1.239)).toBe('$1.24')
+
+  const rows = barChart([0, 4, 8], 2)
+  expect(rows.length).toBe(2)
+  // top row: only the tallest value reaches it; bottom row: every non-zero value fills it
+  expect(rows[0]).toBe('    ██')
+  expect(rows[1]).toBe('  ████')
+  expect(barChart([0, 0], 2)).toEqual(['', ''])
+})
+
+test('Portuguese labels, alerts and countdowns', async () => {
+  const resetsAt = new Date(NOW + 3 * H).toISOString()
+  const limits = [{ kind: 'five_hour', percentUsed: 60, resetsAt }]
+  const r = newAlerts(limits, new Set(), { alertLow: 50, alertHigh: 90, language: 'pt' }, NOW)
+  expect(r.messages).toEqual(['Limite de 5h: 60% usado', 'Janela de 5h acaba em 1h, antes de resetar'])
+  expect(resetsIn(new Date(NOW + 48 * 60000).toISOString(), NOW, 'pt')).toBe('reseta em 48m')
+  expect(paceNote(limits[0]!, NOW, 'pt')).toBe('acaba em 1h')
+  expect(resolveOptions({ language: 'pt', dailyGoal: '5', sound: true })).toMatchObject({
+    language: 'pt',
+    dailyGoal: 5,
+    sound: true
+  })
+  expect(resolveOptions({ language: 'fr' }).language).toBe('en')
 })

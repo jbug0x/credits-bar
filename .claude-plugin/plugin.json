@@ -1,9 +1,11 @@
 {
   "name": "credits-bar",
-  "version": "0.2.0",
-  "description": "A live usage panel for Claude Code: limit bars, pace warning, context breakdown, tokens, cost per reply and a 7-day history.",
+  "version": "0.3.0",
+  "description": "A live usage panel for Claude Code: limit bars, pace warning, daily goal, context, tokens, cost per project, history and CSV export. English and Portuguese.",
   "license": "MIT",
-  "author": { "name": "jbug0x" },
+  "author": {
+    "name": "jbug0x"
+  },
   "types": "./types/index.d.ts",
   "userConfig": {
     "alertLow": {
@@ -22,14 +24,22 @@
       "type": "string",
       "title": "Compact panel",
       "description": "auto: compact when the panel is short; always; never.",
-      "options": ["auto", "always", "never"],
+      "options": [
+        "auto",
+        "always",
+        "never"
+      ],
       "default": "auto"
     },
     "palette": {
       "type": "string",
       "title": "Colors",
       "description": "default (green/yellow/red), colorblind (blue/yellow/magenta) or mono (no colors).",
-      "options": ["default", "colorblind", "mono"],
+      "options": [
+        "default",
+        "colorblind",
+        "mono"
+      ],
       "default": "default"
     },
     "showHistory": {
@@ -55,6 +65,40 @@
       "title": "Show cost per reply",
       "description": "Cost of the last reply and a mini chart of recent ones.",
       "default": true
+    },
+    "language": {
+      "type": "string",
+      "title": "Language",
+      "description": "Labels and messages: en or pt.",
+      "options": [
+        "en",
+        "pt"
+      ],
+      "default": "en"
+    },
+    "dailyGoal": {
+      "type": "number",
+      "title": "Daily spend goal (USD)",
+      "description": "Shows a goal bar and alerts when today's spend reaches it. 0 turns it off.",
+      "default": 0
+    },
+    "sessionSummary": {
+      "type": "boolean",
+      "title": "Session summary",
+      "description": "A toast with the total spent and limits used when the session ends.",
+      "default": true
+    },
+    "showProjects": {
+      "type": "boolean",
+      "title": "Show spend per project",
+      "description": "Top projects by spend over the last 7 days.",
+      "default": true
+    },
+    "sound": {
+      "type": "boolean",
+      "title": "Alert sound",
+      "description": "Play a sound with alerts. Works only where the platform has an audio player (macOS); plays nothing on Windows and Linux.",
+      "default": false
     }
   }
 }
