@@ -249,22 +249,40 @@ export const register: Register = (on, options) => {
 
   // The one-line bar: the fallback while the panel is not seated, or always with /credits-bar.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
-    const snap = await read($, snapshot)
-
-    const mode = await read($, bandMode)
-    const isWanted = mode === 'on' || (mode === 'auto' && !(await isPaneUp($)))
-
-    if (e.props.hasSurvey || snap === null || !isWanted) {
+    if (e.props.hasSurvey) {
       return next(e)
     }
+
+    const snap = await read($, snapshot)
+    const mode = await read($, bandMode)
+    const isWanted = mode === 'on' || (mode === 'auto' && !(await isPaneUp($)))
 
     await read($, tick)
     const { Box, Text, Button } = $.ui.resolve(e)
     const now = Date.now()
     const paint = (level: 'good' | 'warn' | 'bad') => tint(level, opts.palette)
 
+    // The icon button: always there, shows the tightest limit, click toggles the side panel.
+    const tightest = snap && snap.limits.length > 0 ? Math.min(...snap.limits.map(l => 100 - l.percentUsed)) : null
+    const chip = (
+      <Button
+        key="credits-chip"
+        label={tightest === null ? '◔ credits' : `◔ ${Math.round(tightest)}% left`}
+        onPress={async () => {
+          if (await isPaneUp($)) await $.ui.close({ id: PANE })
+          else await $.ui.open({ id: PANE, title: 'Credits' })
+        }}
+      />
+    )
+
+    if (snap === null || !isWanted) {
+      return <Box>{chip}</Box>
+    }
+
     return (
       <Box>
+        {chip}
+        <Text> </Text>
         {snap.limits.length === 0 ? (
           <Text dimColor>Credits: no usage limit reported yet </Text>
         ) : (

@@ -62,3 +62,17 @@ test('panel and band draw a real reading on both surfaces', async ($, on) => {
     await pane.unmount()
   }
 })
+
+test('the icon button is always on the band, with or without a reading', async ($, on) => {
+  on('ui.render', ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>engine band</Text>
+  })
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ plugin: 'credits-bar', surface, ...BAND } as never)
+    expect(await ui.find({ key: 'credits-chip' })).toBeDefined()
+    await ui.unmount()
+  }
+})
