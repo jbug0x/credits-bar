@@ -1,19 +1,15 @@
 # credits-bar
 
-A small open-source mod for Claude Code that keeps a **usage bar above the prompt**:
-how much of your 5-hour and 7-day limits is left (the bar drains as you spend), when
-each one resets, and what the current session has cost. It refreshes after every
-response and when you send a prompt.
+A small open-source mod for Claude Code that shows your **usage at a glance in a side panel**:
+how much of your 5-hour and 7-day limits is left (the bars drain as you spend), when each
+one resets, a **pace warning** when your current burn rate would empty a window before it
+resets (`out in 40m`), the **context window fill** and what the session has cost. A **toast**
+fires the first time a limit passes 80% and 95%.
 
-```
-5h ████████████░░░░░░░░ 62% left resets in 3h   7d ██████████████████░░ 91% left resets in 5d   session $1.42  [Hide]
-```
-
-Hide it with the button or `/credits-bar`; it comes back on the next session or when you run `/credits-bar` again.
-
-Also shown: **context window fill** (`ctx 16%`), a **pace warning** when your current burn
-rate would empty a window before it resets (`(out in 40m)`), and a **toast** the first time a
-limit passes 80% and 95%.
+- **Wide window (144+ columns):** the panel opens by itself at session start.
+- **Narrow window:** a one-line band above the prompt stands in
+  (`5h ██████░░░░ 29% left  7d ████░░░░░░ 22% left  ctx 16%  $1.42`).
+- **`/credits-bar`** hides everything, or brings it back (the panel opens at any width when you ask).
 
 Colors: green above 50% left, yellow above 20%, red below.
 
