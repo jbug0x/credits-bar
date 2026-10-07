@@ -33,7 +33,11 @@ const history = atom({ plugin: 'credits-bar', key: 'history' } as const, {})
 const tick = atom({ plugin: 'credits-bar', key: 'tick' } as const, 0)
 
 async function isPaneUp($: EngineInterface): Promise<boolean> {
-  return (await $.ui.panes()).some(p => p.id === PANE && p.isPlaced)
+  try {
+    return (await $.ui.panes()).some(p => p.id === PANE && p.isPlaced)
+  } catch {
+    return false
+  }
 }
 
 export const register: Register = (on, options) => {
