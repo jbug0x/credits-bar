@@ -46,6 +46,7 @@ type Table = {
   cmdBar: string
   cmdExport: string
   cmdPet: string
+  cmdReport: string
   petOn: string
   petOff: string
   mood: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party', string>
@@ -97,6 +98,7 @@ export const STRINGS: Record<Lang, Table> = {
     cmdBar: 'Show or hide the one-line usage bar above the prompt',
     cmdExport: 'Export the spend history to credits-history.csv in the current folder',
     cmdPet: 'Show or hide the pet',
+    cmdReport: 'Show the full usage summary as text (works on every surface)',
     petOn: 'The pet is back.',
     petOff: 'The pet went to nap. Run /credits-pet to bring it back.',
     mood: {
@@ -159,6 +161,7 @@ export const STRINGS: Record<Lang, Table> = {
     cmdBar: 'Mostrar ou ocultar a barra de uma linha acima do prompt',
     cmdExport: 'Exportar o histórico de gastos para credits-history.csv na pasta atual',
     cmdPet: 'Mostrar ou esconder o bichinho',
+    cmdReport: 'Mostrar o resumo completo de uso em texto (funciona em qualquer superfície)',
     petOn: 'O bichinho voltou.',
     petOff: 'O bichinho foi tirar uma soneca. Use /credits-pet para chamá-lo de volta.',
     mood: {

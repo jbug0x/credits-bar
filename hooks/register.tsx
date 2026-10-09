@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import { PET_WIDTH, petMini, petSprite, petState } from './pet'
+import { buildReport } from './report'
 import { STRINGS } from './strings'
 import {
   addTokens,
@@ -87,6 +88,7 @@ export const register: Register = (on, options) => {
     await $.command.register({ name: 'credits-bar', description: str.cmdBar })
     await $.command.register({ name: 'credits-export', description: str.cmdExport })
     await $.command.register({ name: 'credits-pet', description: str.cmdPet })
+    await $.command.register({ name: 'credits', description: str.cmdReport })
     await $.command.register({ name: 'credits-debug', description: 'Report where the mod draws (for bug reports)' })
 
     await update($, petOn, () => opts.pet)
@@ -157,6 +159,34 @@ export const register: Register = (on, options) => {
     await update($, petOn, () => next)
 
     return { text: next ? str.petOn : str.petOff }
+  })
+
+  // /credits: the whole panel as plain text, for surfaces that do not draw it.
+  on('command.run', { command: 'credits' }, async $ => {
+    const now = await $.clock.now()
+    const snap = await read($, snapshot)
+    const hist = await read($, history)
+    const mem = await read($, pet)
+    const today = new Date(now).toISOString().slice(0, 10)
+
+    return {
+      text: buildReport({
+        lang: opts.language,
+        now,
+        snap,
+        tokens: await read($, tokens),
+        todayUsd: hist[today]?.usd ?? 0,
+        dailyGoal: opts.dailyGoal,
+        projects: projectTotals(hist, now, 7, 3),
+        petName: opts.petName,
+        mood: petState(mem, now, Math.max(0, ...(snap?.limits ?? []).map(l => l.percentUsed)), {
+          low: opts.alertLow,
+          high: opts.alertHigh
+        }),
+        frame: await read($, frame),
+        isPetOn: await read($, petOn)
+      })
+    }
   })
 
   // /credits-debug: where is the mod loaded and drawn? Paste the answer into a bug report.

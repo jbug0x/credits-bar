@@ -37,6 +37,8 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 - Short panel: switches to a compact view (`compact: auto`).
 - A small **icon button** (`◔ 29% left`) always sits above the prompt: it shows your tightest limit, and a click opens or closes the panel.
 - `/credits-panel` opens or closes the side panel (it opens at any width when you ask).
+- `/credits` prints the whole summary as plain text (pet included). It works on every surface, even where the app does not draw the panel or the bar.
+- `/credits-debug` reports where the mod is loaded and drawn (for bug reports).
 - `/credits-export` writes the spend history to `credits-history.csv` in the current folder
   (`date,project,usd,peak_percent`).
 - `/credits-bar` shows or hides the one-line bar above the prompt (it can be shown even with the panel open).
