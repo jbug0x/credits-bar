@@ -102,10 +102,11 @@ export function petSprite(state: PetState, frame: number, range = 0): string[] {
   let air: string
   if (state === 'sleep') air = ['      z', '     z Z', '    Z  z', '       Z'][frame % 4]!
   else if (state === 'party') air = frame % 2 === 0 ? ' ✦     ✦ ' : '   ✦ ✦   '
-  else if (state === 'scared') air = frame % 2 === 0 ? '    !    ' : '   ! !   '
-  else air = `    ${twinkle}`
+  else if (state === 'scared') air = frame % 2 === 0 ? '     !   ' : '    ! !  '
+  else air = `     ${twinkle}`
 
-  const arms = state === 'party' ? (frame % 2 === 0 ? ['\\', '/'] : ['|', '|']) : [' ', ' ']
+  // Arms up while celebrating.
+  const arms = state === 'party' ? ['\\', '/'] : [' ', ' ']
   const face = `${arms[0]}(  ${eyes}  )${arms[1]}`
   const sweat = state === 'tired' ? (frame % 2 === 0 ? '  ,' : ' ') : state === 'scared' ? ' ;' : ''
   const top = `  .-"""-.${sweat}`
