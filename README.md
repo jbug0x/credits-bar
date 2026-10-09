@@ -2,6 +2,14 @@
 
 A small open-source mod for Claude Code that keeps your **usage in a side panel**.
 
+## Preview
+
+<p align="center">
+  <img src="docs/painel.png" alt="The credits panel: limit bars, spend history and the pet at the bottom" width="320">
+</p>
+
+▶ [Watch the demo video](docs/demo.mp4)
+
 **In the panel**
 - **Limit bars** (5-hour and 7-day) that drain as you spend, with a live "resets in" clock.
 - **Pace warning** when your burn rate would empty a window before it resets (`! out in 40m`).
