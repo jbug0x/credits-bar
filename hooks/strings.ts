@@ -49,6 +49,8 @@ type Table = {
   petOn: string
   petOff: string
   mood: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party', string>
+  // what the pet mutters, a few per mood, rotating
+  bubbles: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party', string[]>
 }
 
 export const STRINGS: Record<Lang, Table> = {
@@ -104,6 +106,14 @@ export const STRINGS: Record<Lang, Table> = {
       tired: 'tired',
       scared: 'panicking',
       party: 'celebrating'
+    },
+    bubbles: {
+      idle: ['all quiet in here', 'got any tasks for me?', 'watching the bars', 'psst, nice code'],
+      sleep: ['zzz...', 'five more minutes', 'dreaming of green bars'],
+      work: ['clack clack clack', 'on it!', 'crunching tokens', 'almost there...'],
+      tired: ['phew, that is a lot', 'could use a break', 'running low...'],
+      scared: ['the limit is right there!', 'abort abort', 'please slow down'],
+      party: ['we did it!', 'nailed it', 'another one done!']
     }
   },
   pt: {
@@ -158,6 +168,14 @@ export const STRINGS: Record<Lang, Table> = {
       tired: 'cansado',
       scared: 'em pânico',
       party: 'comemorando'
+    },
+    bubbles: {
+      idle: ['tudo quieto por aqui', 'tem tarefa pra mim?', 'de olho nas barras', 'psiu, bom código'],
+      sleep: ['zzz...', 'só mais cinco minutinhos', 'sonhando com barras verdes'],
+      work: ['tec tec tec', 'deixa comigo!', 'mastigando tokens', 'quase lá...'],
+      tired: ['ufa, é muita coisa', 'precisava de uma pausa', 'ficando sem fôlego...'],
+      scared: ['o limite tá logo ali!', 'socorro', 'vai com calma, por favor'],
+      party: ['conseguimos!', 'mandou bem', 'mais uma pronta!']
     }
   }
 }

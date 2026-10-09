@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { petMini, petSprite, petState } from './pet'
+import { PET_WIDTH, petMini, petSprite, petState } from './pet'
 import { STRINGS } from './strings'
 import {
   addTokens,
@@ -288,12 +288,13 @@ export const register: Register = (on, options) => {
           <Text>{`${petMini(mood, frameNo)}  ${opts.petName} · ${str.mood[mood]}`}</Text>
         ) : (
           <Box flexDirection="column">
-            {petSprite(mood, frameNo).map((line, i) => (
+            {petSprite(mood, frameNo, Math.max(0, Math.min(14, (e.viewport?.columns ?? 40) - 4 - PET_WIDTH))).map((line, i) => (
               <Text key={i} color={opts.palette === 'mono' ? undefined : 'yellow'}>
                 {line}
               </Text>
             ))}
             <Text dimColor>{` ${opts.petName} · ${str.mood[mood]}`}</Text>
+            <Text dimColor>{` » ${str.bubbles[mood][Math.floor(frameNo / 10) % str.bubbles[mood].length]}`}</Text>
           </Box>
         )}
         <Text> </Text>
