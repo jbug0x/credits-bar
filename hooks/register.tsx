@@ -3,6 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { PET_WIDTH, petMini, petSprite, petState } from './pet'
 import { buildReport } from './report'
+import { barSvg, chartSvg, levelColor, petSvg } from './svg'
 import { STRINGS } from './strings'
 import {
   addTokens,
@@ -34,6 +35,7 @@ const PANE = 'credits'
 const TICK_MS = 30_000
 const MAX_TURNS = 8
 const CHART_DAYS = 14
+const SVG_W = 250
 const PET_MS = 1500
 
 const snapshot = atom({ plugin: 'credits-bar', key: 'snapshot' } as const, null)
@@ -316,10 +318,16 @@ export const register: Register = (on, options) => {
   // The side panel.
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     draws[`pane@${e.surface}`] = (draws[`pane@${e.surface}`] ?? 0) + 1
-    const { Box, Text } = $.ui.resolve(e)
+    const ui = $.ui.resolve(e)
+    const { Box, Text } = ui
+    // Surfaces with a vector element (the desktop app, the editor, mobile) get smooth drawings;
+    // the terminal keeps its text. Vectors animate on their own, so they never read the frame
+    // counter (a redraw would restart the animation).
+    const Svg = (ui as unknown as { Svg?: (props: Record<string, unknown>) => unknown }).Svg
+    const isVector = e.surface !== 'terminal' && Svg !== undefined
     const snap = await read($, snapshot)
     const isPetOn = await read($, petOn)
-    const frameNo = isPetOn ? await read($, frame) : 0
+    const frameNo = isPetOn && !isVector ? await read($, frame) : 0
     const mem = await read($, pet)
 
     await read($, tick)
@@ -337,6 +345,12 @@ export const register: Register = (on, options) => {
       <Box flexDirection="column">
         {isCompact ? (
           <Text>{`${petMini(mood, frameNo)}  ${opts.petName} · ${str.mood[mood]}`}</Text>
+        ) : isVector && Svg ? (
+          <Box flexDirection="column">
+            <Svg source={petSvg(mood)} alt={`${opts.petName}: ${str.mood[mood]}`} width={120} height={110} isInteractive />
+            <Text dimColor>{` ${opts.petName} · ${str.mood[mood]}`}</Text>
+            <Text dimColor>{` » ${str.bubbles[mood][Math.floor(now / 15_000) % str.bubbles[mood].length]}`}</Text>
+          </Box>
         ) : (
           <Box flexDirection="column">
             {petSprite(mood, frameNo, Math.max(0, Math.min(14, (e.viewport?.columns ?? 40) - 4 - PET_WIDTH))).map((line, i) => (
@@ -363,6 +377,13 @@ export const register: Register = (on, options) => {
 
     const width = Math.max(8, Math.min(30, (e.viewport?.columns ?? 40) - 4))
     const paint = (level: 'good' | 'warn' | 'bad') => tint(level, opts.palette)
+    // A bar: smooth on the vector surfaces, blocks on the terminal.
+    const bar = (percentFull: number, level: 'good' | 'warn' | 'bad', key?: string) =>
+      isVector && Svg ? (
+        <Svg key={key} source={barSvg(percentFull, levelColor(level, opts.palette), SVG_W)} alt={`${Math.round(percentFull)}%`} width={SVG_W} height={10} />
+      ) : (
+        <Text key={key} color={paint(level)}>{drawBar(percentFull, width)}</Text>
+      )
 
     const turnCosts = await read($, turns)
     const lastCost = turnCosts.length > 0 ? turnCosts[turnCosts.length - 1] : undefined
@@ -400,7 +421,7 @@ export const register: Register = (on, options) => {
                 <Text bold>
                   {labelFor(l.kind)} <Text color={color}>{str.left(left)}</Text>
                 </Text>
-                <Text color={color}>{drawBar(left, width)}</Text>
+                {bar(left, levelLeft(left))}
                 <Text dimColor>{resetsIn(l.resetsAt, now, opts.language) || ' '}</Text>
                 {pace ? <Text color={paint('bad')} bold>{`! ${pace}`}</Text> : null}
                 <Text> </Text>
@@ -415,7 +436,7 @@ export const register: Register = (on, options) => {
               {str.goal} <Text color={paint(levelUsed(Math.min(100, goal)))}>{goal}%</Text>
             </Text>
             {isCompact ? null : (
-              <Text color={paint(levelUsed(Math.min(100, goal)))}>{drawBar(100 - Math.min(100, goal), width)}</Text>
+              bar(100 - Math.min(100, goal), levelUsed(Math.min(100, goal)))
             )}
             <Text dimColor>{str.goalLine(money(today.usd), money(opts.dailyGoal))}</Text>
             {isCompact ? null : <Text> </Text>}
@@ -428,7 +449,7 @@ export const register: Register = (on, options) => {
               {str.context} <Text color={paint(levelUsed(snap.contextPercent))}>{str.usedPercent(snap.contextPercent)}</Text>
             </Text>
             {isCompact ? null : (
-              <Text color={paint(levelUsed(snap.contextPercent))}>{drawBar(100 - snap.contextPercent, width)}</Text>
+              bar(100 - snap.contextPercent, levelUsed(snap.contextPercent))
             )}
             {!isCompact && opts.showBreakdown
               ? snap.categories.map(c => (
@@ -467,7 +488,19 @@ export const register: Register = (on, options) => {
           </Text>
         ) : null}
         {opts.showTurns && !isCompact && turnCosts.length > 1 ? (
-          <Text dimColor>{`${str.replies} ${sparkline(turnCosts)}`}</Text>
+          isVector && Svg ? (
+            <Box flexDirection="column">
+              <Text dimColor>{str.replies}</Text>
+              <Svg
+                source={chartSvg(turnCosts, levelColor('good', opts.palette), turnCosts.map(c => money(c)), SVG_W, 26)}
+                alt={str.replies}
+                width={SVG_W}
+                height={26}
+              />
+            </Box>
+          ) : (
+            <Text dimColor>{`${str.replies} ${sparkline(turnCosts)}`}</Text>
+          )
         ) : null}
 
         {opts.showProjects && !isCompact && topProjects.length > 0 ? (
@@ -483,8 +516,39 @@ export const register: Register = (on, options) => {
         {opts.showHistory && !isCompact && today ? (
           <Box flexDirection="column">
             <Text> </Text>
-            <Text bold>{str.days(isTall ? CHART_DAYS : 7)}</Text>
-            {isTall ? (
+            <Text bold>{str.days(isVector || isTall ? CHART_DAYS : 7)}</Text>
+            {isVector && Svg ? (
+              <Box flexDirection="column">
+                <Text dimColor>{`  ${str.spend} · ${str.today} ${money(today.usd)}`}</Text>
+                <Svg
+                  source={chartSvg(
+                    longDays.map(d => d.usd),
+                    levelColor('good', opts.palette),
+                    longDays.map(d => `${d.key}: ${money(d.usd)}`),
+                    SVG_W,
+                    52
+                  )}
+                  alt={str.spend}
+                  width={SVG_W}
+                  height={52}
+                  isInteractive
+                />
+                <Text dimColor>{`  ${str.peak} · ${str.today} ${Math.round(today.peak)}%`}</Text>
+                <Svg
+                  source={chartSvg(
+                    longDays.map(d => d.peak),
+                    levelColor(levelUsed(today.peak), opts.palette),
+                    longDays.map(d => `${d.key}: ${Math.round(d.peak)}%`),
+                    SVG_W,
+                    36
+                  )}
+                  alt={str.peak}
+                  width={SVG_W}
+                  height={36}
+                  isInteractive
+                />
+              </Box>
+            ) : isTall ? (
               <Box flexDirection="column">
                 {barChart(longDays.map(d => d.usd), 4).map((line, i) => (
                   <Text key={i} dimColor>{`  ${line}`}</Text>

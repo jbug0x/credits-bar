@@ -93,3 +93,23 @@ test('the panel shows the pet and its name, on both surfaces', async $ => {
     await pane.unmount()
   }
 })
+
+test('the desktop panel draws vectors, the terminal panel keeps its text', async ($, on) => {
+  mock.clock(on)
+  on('session.usage', () => ({ value: USAGE }) as never)
+  on('prompt.submit', (_$, e) => e as never)
+  await $.prompt.submit({ text: 'hello' } as never)
+
+  const mount = (surface: 'terminal' | 'desktop') =>
+    $.ui.mount({ plugin: 'credits-bar', surface, component: 'Pane', requestId: 'credits', props: {} } as never)
+
+  const desktop = await mount('desktop')
+  expect(await desktop.find({ type: 'Svg' })).toBeDefined()
+  expect(await desktop.find({ type: 'Text', text: /29% left/ })).toBeDefined()
+  await desktop.unmount()
+
+  const terminal = await mount('terminal')
+  expect(await terminal.find({ type: 'Svg' })).toBeUndefined()
+  expect(await terminal.find({ type: 'Text', text: /█/ })).toBeDefined()
+  await terminal.unmount()
+})

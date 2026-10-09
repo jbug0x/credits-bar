@@ -30,6 +30,13 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
   '-U-U-'
 ```
 
+**Looks per surface**
+- **Terminal:** text and block characters (bars, sparklines, the ASCII pet).
+- **Desktop app (and the editor, mobile):** the same panel drawn with vectors: smooth rounded bars,
+  hover-able bar charts for spend and peak usage, and the pet as a real animated character
+  (breathing, blinking, typing on a keyboard, napping with rising Zs, bouncing with confetti).
+  The animation is SVG/SMIL, so the mod does not redraw the panel for it.
+
 **Layout**
 - Wide window (144+ columns): the panel opens by itself at session start.
 - Narrow window: a one-line band above the prompt stands in
