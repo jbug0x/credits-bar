@@ -22,6 +22,8 @@ export type Options = {
   sessionSummary: boolean
   showProjects: boolean
   sound: boolean
+  pet: boolean
+  petName: string
 }
 
 export const DEFAULT_OPTIONS: Options = {
@@ -37,7 +39,9 @@ export const DEFAULT_OPTIONS: Options = {
   dailyGoal: 0,
   sessionSummary: true,
   showProjects: true,
-  sound: false
+  sound: false,
+  pet: true,
+  petName: 'Pip'
 }
 
 // `userConfig` values arrive loosely typed (numbers may arrive as strings): clamp and default each.
@@ -65,7 +69,10 @@ export function resolveOptions(raw: Record<string, unknown> | undefined): Option
     dailyGoal: Math.max(0, num(o.dailyGoal, 0)),
     sessionSummary: bool(o.sessionSummary, true),
     showProjects: bool(o.showProjects, true),
-    sound: bool(o.sound, false)
+    sound: bool(o.sound, false),
+    pet: bool(o.pet, true),
+    petName:
+      typeof o.petName === 'string' && o.petName.trim() !== '' ? o.petName.trim().slice(0, 16) : DEFAULT_OPTIONS.petName
   }
 }
 

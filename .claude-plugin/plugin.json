@@ -1,7 +1,7 @@
 {
   "name": "credits-bar",
-  "version": "0.3.0",
-  "description": "A live usage panel for Claude Code: limit bars, pace warning, daily goal, context, tokens, cost per project, history and CSV export. English and Portuguese.",
+  "version": "0.4.0",
+  "description": "A live usage panel for Claude Code with a little pet: limit bars, pace warning, daily goal, context, tokens, cost per project, history and CSV export. English and Portuguese.",
   "license": "MIT",
   "author": {
     "name": "jbug0x"
@@ -99,6 +99,18 @@
       "title": "Alert sound",
       "description": "Play a sound with alerts. Works only where the platform has an audio player (macOS); plays nothing on Windows and Linux.",
       "default": false
+    },
+    "pet": {
+      "type": "boolean",
+      "title": "Show the pet",
+      "description": "A little critter that naps, works, gets tired and celebrates, in the panel and next to the icon button.",
+      "default": true
+    },
+    "petName": {
+      "type": "string",
+      "title": "Pet name",
+      "description": "The name shown under the pet in the panel.",
+      "default": "Pip"
     }
   }
 }

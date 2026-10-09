@@ -10,6 +10,7 @@ export type TokenTotals = { input: number; output: number; cacheRead: number; ca
 export type DayRecord = { usd: number; peak: number; projects?: Record<string, number> }
 export type ModelTotals = Record<string, { usd: number; output: number }>
 export type History = Record<string, DayRecord>
+export type PetMemory = { working: boolean; lastActive: number; partyUntil: number }
 
 declare module 'claude-code' {
   interface PluginState {
@@ -21,6 +22,9 @@ declare module 'claude-code' {
       history: History
       tick: number
       models: ModelTotals
+      pet: PetMemory
+      petOn: boolean
+      frame: number
     }
   }
 }

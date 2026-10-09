@@ -45,6 +45,10 @@ type Table = {
   cmdPanel: string
   cmdBar: string
   cmdExport: string
+  cmdPet: string
+  petOn: string
+  petOff: string
+  mood: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party', string>
 }
 
 export const STRINGS: Record<Lang, Table> = {
@@ -89,7 +93,18 @@ export const STRINGS: Record<Lang, Table> = {
     exportFailed: r => `Could not export the history: ${r}`,
     cmdPanel: 'Open or close the usage side panel',
     cmdBar: 'Show or hide the one-line usage bar above the prompt',
-    cmdExport: 'Export the spend history to credits-history.csv in the current folder'
+    cmdExport: 'Export the spend history to credits-history.csv in the current folder',
+    cmdPet: 'Show or hide the pet',
+    petOn: 'The pet is back.',
+    petOff: 'The pet went to nap. Run /credits-pet to bring it back.',
+    mood: {
+      idle: 'chilling',
+      sleep: 'sleeping',
+      work: 'working',
+      tired: 'tired',
+      scared: 'panicking',
+      party: 'celebrating'
+    }
   },
   pt: {
     left: p => `${p}% restante`,
@@ -132,6 +147,17 @@ export const STRINGS: Record<Lang, Table> = {
     exportFailed: r => `Não foi possível exportar o histórico: ${r}`,
     cmdPanel: 'Abrir ou fechar o painel lateral de uso',
     cmdBar: 'Mostrar ou ocultar a barra de uma linha acima do prompt',
-    cmdExport: 'Exportar o histórico de gastos para credits-history.csv na pasta atual'
+    cmdExport: 'Exportar o histórico de gastos para credits-history.csv na pasta atual',
+    cmdPet: 'Mostrar ou esconder o bichinho',
+    petOn: 'O bichinho voltou.',
+    petOff: 'O bichinho foi tirar uma soneca. Use /credits-pet para chamá-lo de volta.',
+    mood: {
+      idle: 'de boa',
+      sleep: 'dormindo',
+      work: 'trabalhando',
+      tired: 'cansado',
+      scared: 'em pânico',
+      party: 'comemorando'
+    }
   }
 }

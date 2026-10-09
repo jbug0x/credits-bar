@@ -14,6 +14,22 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 - **Toasts** at 80% / 95% (configurable), when a window goes on pace to run dry, and a
   **summary when the session ends** (total spent and limits used).
 
+**The pet**
+- A small original critter (name configurable, `Pip` by default) lives at the top of the panel
+  and, in a one-line version `(•ᴗ•)`, next to the icon button above the prompt.
+- It **works** while Claude is running a turn, **celebrates** when a reply finishes or the daily goal
+  is reached, gets **tired** past your first alert threshold and **panics** past the second, and
+  **falls asleep** after a minute of nothing going on.
+- `/credits-pet` sends it off for a nap or brings it back; the `pet` setting turns it off for good.
+- The sprites live in `hooks/pet.ts` and are plain strings, so swapping the character is a one-file change.
+
+```
+   ✻
+ ▄███▄
+ █•ᴗ•█
+ ▀▌ ▐▀
+```
+
 **Layout**
 - Wide window (144+ columns): the panel opens by itself at session start.
 - Narrow window: a one-line band above the prompt stands in

@@ -1,4 +1,4 @@
-import { expect, test } from 'claude-code/testing'
+import { expect, mock, test } from 'claude-code/testing'
 
 
 const BAND = {
@@ -45,6 +45,7 @@ const USAGE = {
 }
 
 test('panel and band draw a real reading on both surfaces', async ($, on) => {
+  mock.clock(on)
   on('session.usage', () => ({ value: USAGE }) as never)
   on('prompt.submit', (_$, e) => e as never)
   await $.prompt.submit({ text: 'hello' } as never)
@@ -59,6 +60,8 @@ test('panel and band draw a real reading on both surfaces', async ($, on) => {
     } as never)
     expect(await pane.find({ type: 'Text', text: /29% left/ })).toBeDefined()
     expect(await pane.find({ type: 'Text', text: /Context/ })).toBeDefined()
+    // the prompt was submitted and no turn has completed: the pet is at work
+    expect(await pane.find({ type: 'Text', text: /working/ })).toBeDefined()
     await pane.unmount()
   }
 })
@@ -74,5 +77,19 @@ test('the icon button is always on the band, with or without a reading', async (
     const ui = await $.ui.mount({ plugin: 'credits-bar', surface, ...BAND } as never)
     expect(await ui.find({ key: 'credits-chip' })).toBeDefined()
     await ui.unmount()
+  }
+})
+
+test('the panel shows the pet and its name, on both surfaces', async $ => {
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const pane = await $.ui.mount({
+      plugin: 'credits-bar',
+      surface,
+      component: 'Pane',
+      requestId: 'credits',
+      props: {}
+    } as never)
+    expect(await pane.find({ type: 'Text', text: /Pip/ })).toBeDefined()
+    await pane.unmount()
   }
 })

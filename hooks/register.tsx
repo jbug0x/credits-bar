@@ -1,6 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
+import { petMini, petSprite, petState } from './pet'
 import { STRINGS } from './strings'
 import {
   addTokens,
@@ -32,6 +33,7 @@ const PANE = 'credits'
 const TICK_MS = 30_000
 const MAX_TURNS = 8
 const CHART_DAYS = 14
+const PET_MS = 1500
 
 const snapshot = atom({ plugin: 'credits-bar', key: 'snapshot' } as const, null)
 // 'auto': the band shows only while the panel is not seated; 'on': always; 'off': never.
@@ -41,6 +43,9 @@ const tokens = atom({ plugin: 'credits-bar', key: 'tokens' } as const, { input: 
 const history = atom({ plugin: 'credits-bar', key: 'history' } as const, {})
 const tick = atom({ plugin: 'credits-bar', key: 'tick' } as const, 0)
 const models = atom({ plugin: 'credits-bar', key: 'models' } as const, {})
+const pet = atom({ plugin: 'credits-bar', key: 'pet' } as const, { working: false, lastActive: 0, partyUntil: 0 })
+const petOn = atom({ plugin: 'credits-bar', key: 'petOn' } as const, true)
+const frame = atom({ plugin: 'credits-bar', key: 'frame' } as const, 0)
 
 async function isPaneUp($: EngineInterface): Promise<boolean> {
   try {
@@ -70,6 +75,7 @@ export const register: Register = (on, options) => {
   let sessionSpent = 0
   let project = ''
   let goalDay = ''
+  let petBeat = 0
 
   on('session.start', async ($, e, next) => {
     await update($, bandMode, () => 'auto')
@@ -78,6 +84,11 @@ export const register: Register = (on, options) => {
     await $.command.register({ name: 'credits-panel', description: str.cmdPanel })
     await $.command.register({ name: 'credits-bar', description: str.cmdBar })
     await $.command.register({ name: 'credits-export', description: str.cmdExport })
+    await $.command.register({ name: 'credits-pet', description: str.cmdPet })
+
+    await update($, petOn, () => opts.pet)
+    const started = await $.clock.now()
+    await update($, pet, () => ({ working: false, lastActive: started, partyUntil: 0 }))
 
     const stored = await $.store.get('history')
     if (stored && typeof stored === 'object') {
@@ -94,6 +105,20 @@ export const register: Register = (on, options) => {
         // keep the previous reading
       }
       await update($, tick, n => n + 1)
+    })
+
+    // The pet's heartbeat: a frame every 1.5s, a third of that while it sleeps.
+    $.clock.every(PET_MS, async () => {
+      try {
+        if (!(await read($, petOn))) return
+        const mem = await read($, pet)
+        const asleep = !mem.working && (await $.clock.now()) - mem.lastActive > 60_000
+        petBeat += 1
+        if (asleep && petBeat % 3 !== 0) return
+        await update($, frame, n => n + 1)
+      } catch {
+        // the pet can skip a beat
+      }
     })
 
     // Unasked, the pane seats from 144 columns; below that the one-line band stands in.
@@ -121,6 +146,14 @@ export const register: Register = (on, options) => {
     await update($, bandMode, () => (isShowing ? 'off' : 'on'))
 
     return { text: isShowing ? str.barHidden : str.barShown }
+  })
+
+  // /credits-pet: send the pet off for a nap, or call it back.
+  on('command.run', { command: 'credits-pet' }, async $ => {
+    const next = !(await read($, petOn))
+    await update($, petOn, () => next)
+
+    return { text: next ? str.petOn : str.petOff }
   })
 
   // /credits-export: write the spend history to credits-history.csv in the current folder.
@@ -168,6 +201,7 @@ export const register: Register = (on, options) => {
     if (opts.dailyGoal > 0 && spentToday >= opts.dailyGoal && goalDay !== today) {
       goalDay = today
       $.ui.toast(str.goalHit(money(spentToday), money(opts.dailyGoal)))
+      await update($, pet, p => ({ ...p, partyUntil: now + 12_000 }))
       isAlert = true
     }
 
@@ -178,8 +212,10 @@ export const register: Register = (on, options) => {
 
   // The first reading, so the numbers are there from the first turn.
   on('prompt.submit', async ($, e, next) => {
-    // A failed reading must never get in the way of the prompt.
+    // Nothing here may get in the way of the prompt.
     try {
+      const stamp = await $.clock.now()
+      await update($, pet, p => ({ ...p, working: true, lastActive: stamp }))
       const value = toSnapshot(await $.session.usage({ breakdown: opts.showBreakdown ? 'summary' : undefined }))
       await update($, snapshot, () => value)
       if (lastUsd === null && value.usd !== null) lastUsd = value.usd
@@ -192,6 +228,13 @@ export const register: Register = (on, options) => {
 
   // A turn ended: file what it cost, which model ran it and what tokens it used.
   on('turn.complete', async ($, e, next) => {
+    const stamp = await $.clock.now()
+    await update($, pet, p => ({
+      working: false,
+      lastActive: stamp,
+      partyUntil: e.reason === 'answer' ? stamp + 5000 : p.partyUntil
+    }))
+
     const cost = pending
     pending = 0
     await update($, turns, list => [...list, cost].slice(-MAX_TURNS))
@@ -224,15 +267,48 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
     const snap = await read($, snapshot)
-
-    if (snap === null) {
-      return <Text dimColor>{str.noReading}</Text>
-    }
+    const isPetOn = await read($, petOn)
+    const frameNo = isPetOn ? await read($, frame) : 0
+    const mem = await read($, pet)
 
     await read($, tick)
     const now = Date.now()
     const rows = e.viewport?.rows ?? 40
     const isCompact = opts.compact === 'always' || (opts.compact === 'auto' && rows < 24)
+
+    const mood = petState(
+      mem,
+      now,
+      Math.max(0, ...(snap?.limits ?? []).map(l => l.percentUsed)),
+      { low: opts.alertLow, high: opts.alertHigh }
+    )
+    const petBlock = isPetOn ? (
+      <Box flexDirection="column">
+        {isCompact ? (
+          <Text>{`${petMini(mood, frameNo)}  ${opts.petName} · ${str.mood[mood]}`}</Text>
+        ) : (
+          <Box flexDirection="column">
+            {petSprite(mood, frameNo).map((line, i) => (
+              <Text key={i} color={opts.palette === 'mono' ? undefined : 'yellow'}>
+                {line}
+              </Text>
+            ))}
+            <Text dimColor>{` ${opts.petName} · ${str.mood[mood]}`}</Text>
+          </Box>
+        )}
+        <Text> </Text>
+      </Box>
+    ) : null
+
+    if (snap === null) {
+      return (
+        <Box flexDirection="column">
+          {petBlock}
+          <Text dimColor>{str.noReading}</Text>
+        </Box>
+      )
+    }
+
     const width = Math.max(8, Math.min(30, (e.viewport?.columns ?? 40) - 4))
     const paint = (level: 'good' | 'warn' | 'bad') => tint(level, opts.palette)
 
@@ -252,6 +328,7 @@ export const register: Register = (on, options) => {
 
     return (
       <Box flexDirection="column">
+        {petBlock}
         {snap.limits.length === 0 ? (
           <Text dimColor>{str.noLimit}</Text>
         ) : (
@@ -402,8 +479,24 @@ export const register: Register = (on, options) => {
       />
     )
 
+    // The pet rides along, just left of the icon button.
+    const isPetOn = await read($, petOn)
+    const bandFrame = isPetOn ? await read($, frame) : 0
+    const bandMood = petState(
+      await read($, pet),
+      now,
+      Math.max(0, ...(snap?.limits ?? []).map(l => l.percentUsed)),
+      { low: opts.alertLow, high: opts.alertHigh }
+    )
+    const right = (
+      <Box>
+        {isPetOn ? <Text>{`${petMini(bandMood, bandFrame)}  `}</Text> : null}
+        {chip}
+      </Box>
+    )
+
     if (snap === null || !isWanted) {
-      return <Box justifyContent="flex-end">{chip}</Box>
+      return <Box justifyContent="flex-end">{right}</Box>
     }
 
     // The bar's readings on the left, the icon button pushed to the right edge.
@@ -432,7 +525,7 @@ export const register: Register = (on, options) => {
           {snap.usd !== null ? <Text dimColor>{money(snap.usd)} </Text> : null}
           <Button key="hide" label={str.hide} onPress={() => update($, bandMode, () => 'off')} />
         </Box>
-        {chip}
+        {right}
       </Box>
     )
   })
