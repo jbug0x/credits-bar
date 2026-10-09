@@ -76,6 +76,8 @@ export const register: Register = (on, options) => {
   let project = ''
   let goalDay = ''
   let petBeat = 0
+  // How often each surface asked the hooks to draw (for /credits-debug).
+  const draws: Record<string, number> = {}
 
   on('session.start', async ($, e, next) => {
     await update($, bandMode, () => 'auto')
@@ -85,6 +87,7 @@ export const register: Register = (on, options) => {
     await $.command.register({ name: 'credits-bar', description: str.cmdBar })
     await $.command.register({ name: 'credits-export', description: str.cmdExport })
     await $.command.register({ name: 'credits-pet', description: str.cmdPet })
+    await $.command.register({ name: 'credits-debug', description: 'Report where the mod draws (for bug reports)' })
 
     await update($, petOn, () => opts.pet)
     const started = await $.clock.now()
@@ -154,6 +157,23 @@ export const register: Register = (on, options) => {
     await update($, petOn, () => next)
 
     return { text: next ? str.petOn : str.petOff }
+  })
+
+  // /credits-debug: where is the mod loaded and drawn? Paste the answer into a bug report.
+  on('command.run', { command: 'credits-debug' }, async $ => {
+    const surfaces = await $.session.surfaces()
+    const panes = (await $.ui.panes()).map(p => `${p.id}(placed=${p.isPlaced}, shown=${p.isShown})`)
+    const drawn = Object.entries(draws).map(([k, n]) => `${k}=${n}`)
+    const hasReading = (await read($, snapshot)) !== null
+
+    return {
+      text: [
+        `surfaces: ${surfaces.join(', ') || 'none'}`,
+        `panes: ${panes.join(', ') || 'none'}`,
+        `draw calls: ${drawn.join(', ') || 'none yet'}`,
+        `reading: ${hasReading ? 'yes' : 'not yet (send a prompt)'}`
+      ].join(' | ')
+    }
   })
 
   // /credits-export: write the spend history to credits-history.csv in the current folder.
@@ -265,6 +285,7 @@ export const register: Register = (on, options) => {
 
   // The side panel.
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    draws[`pane@${e.surface}`] = (draws[`pane@${e.surface}`] ?? 0) + 1
     const { Box, Text } = $.ui.resolve(e)
     const snap = await read($, snapshot)
     const isPetOn = await read($, petOn)
@@ -454,6 +475,7 @@ export const register: Register = (on, options) => {
 
   // The one-line bar: the fallback while the panel is not seated, or always with /credits-bar.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    draws[`band@${e.surface}`] = (draws[`band@${e.surface}`] ?? 0) + 1
     if (e.props.hasSurvey) {
       return next(e)
     }
