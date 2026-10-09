@@ -17,8 +17,7 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 **The pet**
 - A small original critter (name configurable, `Pip` by default) lives at the top of the panel
   and, in a one-line version `(•ᴗ•)`, next to the icon button above the prompt.
-- It strolls around the panel when idle, mutters a line now and then and has a few moods:
-- It **works** while Claude is running a turn, **celebrates** when a reply finishes or the daily goal
+- It strolls around the panel when idle, mutters a line now and then, and has moods. It **works** while Claude is running a turn, **celebrates** when a reply finishes or the daily goal
   is reached, gets **tired** past your first alert threshold and **panics** past the second, and
   **falls asleep** after a minute of nothing going on.
 - `/credits-pet` sends it off for a nap or brings it back; the `pet` setting turns it off for good.
