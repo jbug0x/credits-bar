@@ -5,10 +5,12 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 ## Preview
 
 <p align="center">
-  <img src="docs/painel.png" alt="The credits panel: limit bars, spend history and the pet at the bottom" width="320">
+  <img src="docs/painel.png" alt="The credits panel: limit bars, spend history and the pet at the bottom" width="300">
+  &nbsp;&nbsp;
+  <img src="docs/demo.gif" alt="Demo: the panel and the pet reacting to clicks" width="300">
 </p>
 
-▶ [Watch the demo video](docs/demo.mp4)
+▶ [Full-quality video](docs/demo.mp4)
 
 **In the panel**
 - **Limit bars** (5-hour and 7-day) that drain as you spend, with a live "resets in" clock.
