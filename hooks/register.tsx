@@ -3,7 +3,7 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { PET_WIDTH, petMini, petSprite, petState } from './pet'
 import { buildReport } from './report'
-import { barSvg, chartSvg, levelColor, petSvg } from './svg'
+import { barSvg, chartSvg, levelColor } from './svg'
 import { STRINGS } from './strings'
 import {
   addTokens,
@@ -321,8 +321,7 @@ export const register: Register = (on, options) => {
     const ui = $.ui.resolve(e)
     const { Box, Text } = ui
     // Surfaces with a vector element (the desktop app, the editor, mobile) get smooth drawings;
-    // the terminal keeps its text. Vectors animate on their own, so they never read the frame
-    // counter (a redraw would restart the animation).
+    // the terminal keeps its text. The vector panel has no pet, so it never reads the frame counter.
     const Svg = (ui as unknown as { Svg?: (props: Record<string, unknown>) => unknown }).Svg
     const isVector = e.surface !== 'terminal' && Svg !== undefined
     const snap = await read($, snapshot)
@@ -341,16 +340,11 @@ export const register: Register = (on, options) => {
       Math.max(0, ...(snap?.limits ?? []).map(l => l.percentUsed)),
       { low: opts.alertLow, high: opts.alertHigh }
     )
-    const petBlock = isPetOn ? (
+    // The pet lives in the text panel (terminal) and in the band; the vector panel has none.
+    const petBlock = isPetOn && !isVector ? (
       <Box flexDirection="column">
         {isCompact ? (
           <Text>{`${petMini(mood, frameNo)}  ${opts.petName} · ${str.mood[mood]}`}</Text>
-        ) : isVector && Svg ? (
-          <Box flexDirection="column">
-            <Svg source={petSvg(mood)} alt={`${opts.petName}: ${str.mood[mood]}`} width={120} height={110} isInteractive />
-            <Text dimColor>{` ${opts.petName} · ${str.mood[mood]}`}</Text>
-            <Text dimColor>{` » ${str.bubbles[mood][Math.floor(now / 15_000) % str.bubbles[mood].length]}`}</Text>
-          </Box>
         ) : (
           <Box flexDirection="column">
             {petSprite(mood, frameNo, Math.max(0, Math.min(14, (e.viewport?.columns ?? 40) - 4 - PET_WIDTH))).map((line, i) => (

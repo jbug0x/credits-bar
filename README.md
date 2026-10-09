@@ -15,7 +15,7 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
   **summary when the session ends** (total spent and limits used).
 
 **The pet**
-- A small original critter (name configurable, `Pip` by default) lives at the top of the panel
+- A small original critter (name configurable, `Pip` by default) lives at the top of the terminal panel
   and, in a one-line version `(•ᴗ•)`, next to the icon button above the prompt.
 - It strolls around the panel when idle, mutters a line now and then, and has moods. It **works** while Claude is running a turn, **celebrates** when a reply finishes or the daily goal
   is reached, gets **tired** past your first alert threshold and **panics** past the second, and
@@ -32,10 +32,9 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 
 **Looks per surface**
 - **Terminal:** text and block characters (bars, sparklines, the ASCII pet).
-- **Desktop app (and the editor, mobile):** the same panel drawn with vectors: smooth rounded bars,
-  hover-able bar charts for spend and peak usage, and the pet as a real animated character
-  (breathing, blinking, typing on a keyboard, napping with rising Zs, bouncing with confetti).
-  The animation is SVG/SMIL, so the mod does not redraw the panel for it.
+- **Desktop app (and the editor, mobile):** the same panel drawn with vectors: smooth rounded bars
+  and hover-able bar charts for spend and peak usage. The pet is not drawn in this panel; it stays
+  in the one-line band next to the icon button (and in the terminal panel).
 
 **Layout**
 - Wide window (144+ columns): the panel opens by itself at session start.

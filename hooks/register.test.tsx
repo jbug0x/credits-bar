@@ -61,7 +61,8 @@ test('panel and band draw a real reading on both surfaces', async ($, on) => {
     expect(await pane.find({ type: 'Text', text: /29% left/ })).toBeDefined()
     expect(await pane.find({ type: 'Text', text: /Context/ })).toBeDefined()
     // the prompt was submitted and no turn has completed: the pet is at work
-    expect(await pane.find({ type: 'Text', text: /working/ })).toBeDefined()
+    // (the vector panel has no pet, so only the text panel shows it)
+    if (surface === 'terminal') expect(await pane.find({ type: 'Text', text: /working/ })).toBeDefined()
     await pane.unmount()
   }
 })
@@ -80,21 +81,19 @@ test('the icon button is always on the band, with or without a reading', async (
   }
 })
 
-test('the panel shows the pet and its name, on both surfaces', async $ => {
-  for (const surface of ['terminal', 'desktop'] as const) {
-    const pane = await $.ui.mount({
-      plugin: 'credits-bar',
-      surface,
-      component: 'Pane',
-      requestId: 'credits',
-      props: {}
-    } as never)
-    expect(await pane.find({ type: 'Text', text: /Pip/ })).toBeDefined()
-    await pane.unmount()
-  }
+test('the text panel shows the pet and its name', async $ => {
+  const pane = await $.ui.mount({
+    plugin: 'credits-bar',
+    surface: 'terminal',
+    component: 'Pane',
+    requestId: 'credits',
+    props: {}
+  } as never)
+  expect(await pane.find({ type: 'Text', text: /Pip/ })).toBeDefined()
+  await pane.unmount()
 })
 
-test('the desktop panel draws vectors, the terminal panel keeps its text', async ($, on) => {
+test('the desktop panel draws vectors and has no pet; the terminal panel keeps its text and its pet', async ($, on) => {
   mock.clock(on)
   on('session.usage', () => ({ value: USAGE }) as never)
   on('prompt.submit', (_$, e) => e as never)
@@ -106,10 +105,12 @@ test('the desktop panel draws vectors, the terminal panel keeps its text', async
   const desktop = await mount('desktop')
   expect(await desktop.find({ type: 'Svg' })).toBeDefined()
   expect(await desktop.find({ type: 'Text', text: /29% left/ })).toBeDefined()
+  expect(await desktop.find({ type: 'Text', text: /Pip/ })).toBeUndefined()
   await desktop.unmount()
 
   const terminal = await mount('terminal')
   expect(await terminal.find({ type: 'Svg' })).toBeUndefined()
   expect(await terminal.find({ type: 'Text', text: /█/ })).toBeDefined()
+  expect(await terminal.find({ type: 'Text', text: /Pip/ })).toBeDefined()
   await terminal.unmount()
 })

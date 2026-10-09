@@ -1,9 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 
-import { barSvg, chartSvg, levelColor, petSvg } from './svg'
-import type { PetState } from './pet'
-
-const STATES: PetState[] = ['idle', 'sleep', 'work', 'tired', 'scared', 'party']
+import { barSvg, chartSvg, levelColor } from './svg'
 
 // Every tag opened is closed (or self-closed): a cheap well-formedness check for the markup.
 function isBalanced(svg: string): boolean {
@@ -33,21 +30,6 @@ test('chart: one bar per value, the last highlighted, titles on hover', async ()
   expect(svg.match(/#123456/g)?.length).toBe(1)
   expect(isBalanced(svg)).toBe(true)
   expect(isBalanced(chartSvg([0, 0], '#123456'))).toBe(true)
-})
-
-test('the pet is well-formed in every mood, moves, and each mood has its own tell', async () => {
-  for (const mood of STATES) {
-    const svg = petSvg(mood)
-    expect(isBalanced(svg)).toBe(true)
-    expect(svg).toContain('<animate')
-    expect(svg.length).toBeLessThan(20000)
-  }
-  expect(petSvg('work')).toContain('#4a4a52') // the keyboard
-  expect(petSvg('sleep')).toContain('>z<')
-  expect(petSvg('party')).toContain('#f4c542')
-  expect(petSvg('scared')).toContain('>!<')
-  expect(petSvg('tired')).toContain('#6ab0e8') // sweat drop
-  expect(new Set(STATES.map(petSvg)).size).toBe(6)
 })
 
 test('palettes recolor the bars', async () => {
