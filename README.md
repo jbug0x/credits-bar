@@ -1,38 +1,38 @@
 # credits-bar
 
-A small open-source mod for Claude Code that keeps your **usage in a side panel**.
+🇧🇷 Português · 🇺🇸 [Read in English](README.en.md)
 
-## Preview
+Um mod open source para o Claude Code que mantém o seu **uso num painel lateral**.
+
+## Prévia
 
 <p align="center">
-  <img src="docs/painel.png" alt="The credits panel: limit bars, spend history and the pet at the bottom" width="300">
+  <img src="docs/painel.png" alt="O painel de créditos: barras de limite, histórico de gastos e o bichinho no rodapé" width="300">
   &nbsp;&nbsp;
-  <img src="docs/demo.gif" alt="Demo: the panel and the pet reacting to clicks" width="300">
+  <img src="docs/demo.gif" alt="Demonstração: o painel e o bichinho reagindo aos cliques" width="300">
 </p>
 
-▶ [Full-quality video](docs/demo.mp4)
+**No painel**
+- **Barras de limite** (5 horas e 7 dias) que esvaziam conforme você gasta, com um relógio de "reseta em" ao vivo.
+- **Aviso de ritmo** quando o seu consumo atual esvaziaria uma janela antes de ela resetar (`! acaba em 40m`).
+- **Meta diária**: defina uma meta em dólares e ganhe uma barra própria e um aviso quando ela for atingida.
+- **Janela de contexto**: quanto está cheia e o que a está enchendo. Atualiza a cada 30s, não só depois das respostas.
+- **Tokens da sessão**, taxa de acerto do cache de prompt e **custo por modelo** na sessão.
+- **Custo**: total da sessão, última resposta e um mini gráfico das respostas recentes.
+- **Gasto por projeto** (as pastas que mais gastaram nos últimos 7 dias).
+- **Histórico**: sparklines de 7 dias, que crescem para um gráfico de barras de 14 dias quando há dados e espaço.
+- **Avisos (toasts)** em 80% e 95% (configurável), quando uma janela entra em ritmo de acabar antes do reset, e um
+  **resumo ao fim da sessão** (total gasto e limites usados).
 
-**In the panel**
-- **Limit bars** (5-hour and 7-day) that drain as you spend, with a live "resets in" clock.
-- **Pace warning** when your burn rate would empty a window before it resets (`! out in 40m`).
-- **Daily goal**: set a USD goal and get its own bar plus a toast when it is reached.
-- **Context window**: fill and what is filling it. It refreshes every 30s, not only after replies.
-- **Session tokens**, prompt-cache hit rate and **cost per model** for the session.
-- **Cost**: session total, last reply and a mini chart of recent replies.
-- **Spend per project** (top folders over the last 7 days).
-- **History**: 7-day sparklines, growing into a 14-day bar chart once there is data and room.
-- **Toasts** at 80% / 95% (configurable), when a window goes on pace to run dry, and a
-  **summary when the session ends** (total spent and limits used).
-
-**The pet** (a little Tamagotchi-style critter, at the bottom of the panel on every surface)
-- A small original critter (name configurable, `Pip` by default) lives on a tiny stage with a floor
-  at the **bottom** of the panel and, in a one-line version `(•ᴗ•)`, next to the icon button above the prompt.
-- **Click it** and it reacts: giggles, cheers, waves, shows some love, gets dizzy (a different reaction each click). There is nothing to feed.
-- It strolls around when idle, **works** while Claude is running a turn, **celebrates** when a reply
-  finishes or the daily goal is reached, gets **tired** past your first alert threshold, **panics** past
-  the second, and **falls asleep** after a minute of nothing going on. It mutters a line now and then.
-- `/credits-pet` sends it off for a nap or brings it back; the `pet` setting turns it off for good.
-- The sprites live in `hooks/pet.ts` and are plain strings, so swapping the character is a one-file change.
+**O bichinho** (um Tamagotchi simples, no rodapé do painel em qualquer superfície)
+- Uma criaturinha original (nome configurável, `Pip` por padrão) mora num palquinho com chão no **rodapé**
+  do painel e, numa versão de uma linha `(•ᴗ•)`, ao lado do botão de ícone acima do prompt.
+- **Clique nele** e ele reage: dá risada, comemora, acena, faz carinho, fica tonto (uma reação diferente a cada clique). Não precisa alimentar.
+- Passeia quando está de boa, **trabalha** enquanto o Claude roda um turno, **comemora** quando uma resposta termina
+  ou a meta diária é atingida, fica **cansado** acima do primeiro limiar de alerta, **entra em pânico** acima do segundo
+  e **cai no sono** depois de um minuto sem nada acontecendo. De vez em quando solta uma frase.
+- `/credits-pet` manda ele tirar uma soneca ou chama de volta; a opção `pet` desliga de vez.
+- Os sprites ficam em `hooks/pet.ts` e são texto simples, então trocar o personagem é mexer num arquivo só.
 
 ```
       ✻
@@ -41,52 +41,52 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
    Pip · de boa
 ```
 
-**Looks per surface**
-- **Terminal:** text and block characters (bars, sparklines, the ASCII pet).
-- **Desktop app (and the editor, mobile):** the same panel drawn with vectors: smooth rounded bars
-  and hover-able bar charts for spend and peak usage. The pet is text on every surface.
+**Visual por superfície**
+- **Terminal:** texto e caracteres de bloco (barras, sparklines, o bichinho em ASCII).
+- **App desktop (e o editor, mobile):** o mesmo painel desenhado com vetores: barras redondas e lisas e
+  gráficos de barras com informação ao passar o mouse, para gasto e pico de uso. O bichinho é texto em todas as superfícies.
 
 **Layout**
-- Wide window (144+ columns): the panel opens by itself at session start.
-- Narrow window: a one-line band above the prompt stands in
-  (`5h ██████░░░░ 29% left  7d ████░░░░░░ 22% left  ctx 16%  $1.42`).
-- Short panel: switches to a compact view (`compact: auto`).
-- A small **icon button** (`◔ 29% left`) always sits above the prompt: it shows your tightest limit, and a click opens or closes the panel.
-- `/credits-panel` opens or closes the side panel (it opens at any width when you ask).
-- `/credits` prints the whole summary as plain text (pet included). It works on every surface, even where the app does not draw the panel or the bar.
-- `/credits-debug` reports where the mod is loaded and drawn (for bug reports).
-- `/credits-export` writes the spend history to `credits-history.csv` in the current folder
+- Janela larga (144+ colunas): o painel abre sozinho no início da sessão.
+- Janela estreita: uma faixa de uma linha acima do prompt faz o papel dele
+  (`5h ██████░░░░ 29% restante  7d ████░░░░░░ 22% restante  ctx 16%  $1.42`).
+- Painel baixo: muda para uma visão compacta (`compact: auto`).
+- Um pequeno **botão de ícone** (`◔ 29% restante`) fica sempre acima do prompt: mostra o seu limite mais apertado, e um clique abre ou fecha o painel.
+- `/credits-panel` abre ou fecha o painel lateral (abre em qualquer largura quando você pede).
+- `/credits` imprime o resumo completo em texto puro (com o bichinho). Funciona em qualquer superfície, mesmo onde o app não desenha o painel nem a faixa.
+- `/credits-debug` informa onde o mod está carregado e desenhado (para relatos de bug).
+- `/credits-export` grava o histórico de gastos em `credits-history.csv` na pasta atual
   (`date,project,usd,peak_percent`).
-- `/credits-bar` shows or hides the one-line bar above the prompt (it can be shown even with the panel open).
+- `/credits-bar` mostra ou esconde a faixa de uma linha acima do prompt (pode ser mostrada mesmo com o painel aberto).
 
-**Settings** (`userConfig`, shown in the plugin config menu): alert thresholds, compact mode,
-colors (`default`, `colorblind`, `mono`), language (`pt` by default, or `en`), daily goal, alert sound and
-which blocks to show.
+**Configurações** (`userConfig`, no menu de configuração de plugins): limiares de alerta, modo compacto,
+cores (`default`, `colorblind`, `mono`), idioma (`pt` por padrão, ou `en`), meta diária, som de alerta e
+quais blocos mostrar.
 
-> **Sound:** the alert sound uses the engine's audio player, which exists on macOS only. On
-> Windows and Linux the option does nothing.
+> **Som:** o som de alerta usa o reprodutor de áudio do motor, que só existe no macOS. No
+> Windows e no Linux a opção não faz nada.
 
-## Install
+## Instalação
 
 ```
 /plugin install credits-bar --marketplace jbug0x/credits-bar
 ```
 
-Or, for development: `claude --plugin-dir ./credits-bar`.
+Ou, para desenvolvimento: `claude --plugin-dir ./credits-bar`.
 
-## Notes
+## Observações
 
-- Limit windows come from the rate-limit data Claude Code receives, so they only appear
-  on a subscription. Otherwise you only see the session cost.
-- Nothing is sent anywhere: the mod only reads figures the engine already has.
-- Layout: `hooks/register.tsx` (all logic), `types/index.d.ts` (state contract).
+- As janelas de limite vêm dos dados de rate limit que o Claude Code recebe, então só aparecem
+  em conta com assinatura. Sem assinatura você vê apenas o custo da sessão.
+- Nada é enviado para lugar nenhum: o mod só lê números que o motor já tem.
+- Estrutura: `hooks/register.tsx` (toda a lógica), `types/index.d.ts` (contrato de estado).
 
-## Ideas / roadmap
+## Ideias / roadmap
 
-- Plan limits per model (needs the engine to expose them; today only per-model *spend* is shown)
-- Spend per project over longer ranges and per-session history
-- Cross-platform sound (the engine plays audio on macOS only)
-- More languages (add a table in `hooks/strings.ts`)
-- Weekly/monthly goals
+- Limites do plano por modelo (depende de o motor expor; hoje só o *gasto* por modelo é mostrado)
+- Gasto por projeto em períodos mais longos e histórico por sessão
+- Som multiplataforma (o motor só toca áudio no macOS)
+- Mais idiomas (adicione uma tabela em `hooks/strings.ts`)
+- Metas semanais e mensais
 
-Contributions welcome. MIT licensed.
+Contribuições são bem-vindas. Licença MIT.
