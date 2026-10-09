@@ -18,6 +18,7 @@ export type ReportInput = {
   petName: string
   mood: PetState
   frame: number
+  pokes?: number
   isPetOn: boolean
 }
 
@@ -25,7 +26,7 @@ export function buildReport(r: ReportInput): string {
   const str = STRINGS[r.lang]
   const lines: string[] = []
 
-  if (r.isPetOn) lines.push(`${petMini(r.mood, r.frame)}  ${r.petName} · ${str.mood[r.mood]}`)
+  if (r.isPetOn) lines.push(`${petMini(r.mood, r.frame, r.pokes ?? 0)}  ${r.petName} · ${str.mood[r.mood]}`)
 
   if (r.snap === null) {
     lines.push(str.noReading)

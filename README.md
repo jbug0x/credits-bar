@@ -14,27 +14,27 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 - **Toasts** at 80% / 95% (configurable), when a window goes on pace to run dry, and a
   **summary when the session ends** (total spent and limits used).
 
-**The pet**
-- A small original critter (name configurable, `Pip` by default) lives at the top of the terminal panel
-  and, in a one-line version `(•ᴗ•)`, next to the icon button above the prompt.
-- It strolls around the panel when idle, mutters a line now and then, and has moods. It **works** while Claude is running a turn, **celebrates** when a reply finishes or the daily goal
-  is reached, gets **tired** past your first alert threshold and **panics** past the second, and
-  **falls asleep** after a minute of nothing going on.
+**The pet** (a little Tamagotchi-style critter, at the bottom of the panel on every surface)
+- A small original critter (name configurable, `Pip` by default) lives on a tiny stage with a floor
+  at the **bottom** of the panel and, in a one-line version `(•ᴗ•)`, next to the icon button above the prompt.
+- **Click it** and it reacts: giggles, cheers, waves, shows some love, gets dizzy (a different reaction each click). There is nothing to feed.
+- It strolls around when idle, **works** while Claude is running a turn, **celebrates** when a reply
+  finishes or the daily goal is reached, gets **tired** past your first alert threshold, **panics** past
+  the second, and **falls asleep** after a minute of nothing going on. It mutters a line now and then.
 - `/credits-pet` sends it off for a nap or brings it back; the `pet` setting turns it off for good.
 - The sprites live in `hooks/pet.ts` and are plain strings, so swapping the character is a one-file change.
 
 ```
-     ✻
-  .-"""-.
- (  •ᴗ•  )
-  '-U-U-'
+      ✻
+    (•ᴗ•)
+  .  ˙ ✿ .  ˙ o .
+   Pip · de boa
 ```
 
 **Looks per surface**
 - **Terminal:** text and block characters (bars, sparklines, the ASCII pet).
 - **Desktop app (and the editor, mobile):** the same panel drawn with vectors: smooth rounded bars
-  and hover-able bar charts for spend and peak usage. The pet is not drawn in this panel; it stays
-  in the one-line band next to the icon button (and in the terminal panel).
+  and hover-able bar charts for spend and peak usage. The pet is text on every surface.
 
 **Layout**
 - Wide window (144+ columns): the panel opens by itself at session start.
@@ -50,7 +50,7 @@ A small open-source mod for Claude Code that keeps your **usage in a side panel*
 - `/credits-bar` shows or hides the one-line bar above the prompt (it can be shown even with the panel open).
 
 **Settings** (`userConfig`, shown in the plugin config menu): alert thresholds, compact mode,
-colors (`default`, `colorblind`, `mono`), language (`en`, `pt`), daily goal, alert sound and
+colors (`default`, `colorblind`, `mono`), language (`pt` by default, or `en`), daily goal, alert sound and
 which blocks to show.
 
 > **Sound:** the alert sound uses the engine's audio player, which exists on macOS only. On

@@ -28,7 +28,7 @@ test('panel says so when there is no reading yet', async $ => {
       requestId: 'credits',
       props: {}
     } as never)
-    expect(await ui.find({ type: 'Text', text: /No usage reading yet/ })).toBeDefined()
+    expect(await ui.find({ type: 'Text', text: /Ainda sem leitura/ })).toBeDefined()
     await ui.unmount()
   }
 })
@@ -58,11 +58,11 @@ test('panel and band draw a real reading on both surfaces', async ($, on) => {
       requestId: 'credits',
       props: {}
     } as never)
-    expect(await pane.find({ type: 'Text', text: /29% left/ })).toBeDefined()
-    expect(await pane.find({ type: 'Text', text: /Context/ })).toBeDefined()
+    expect(await pane.find({ type: 'Text', text: /29% restante/ })).toBeDefined()
+    expect(await pane.find({ type: 'Text', text: /Contexto/ })).toBeDefined()
     // the prompt was submitted and no turn has completed: the pet is at work
     // (the vector panel has no pet, so only the text panel shows it)
-    if (surface === 'terminal') expect(await pane.find({ type: 'Text', text: /working/ })).toBeDefined()
+    if (surface === 'terminal') expect(await pane.find({ type: 'Text', text: /trabalhando/ })).toBeDefined()
     await pane.unmount()
   }
 })
@@ -93,7 +93,7 @@ test('the text panel shows the pet and its name', async $ => {
   await pane.unmount()
 })
 
-test('the desktop panel draws vectors and has no pet; the terminal panel keeps its text and its pet', async ($, on) => {
+test('the panels draw vectors on the desktop and text on the terminal, both with the pet at the bottom', async ($, on) => {
   mock.clock(on)
   on('session.usage', () => ({ value: USAGE }) as never)
   on('prompt.submit', (_$, e) => e as never)
@@ -104,8 +104,8 @@ test('the desktop panel draws vectors and has no pet; the terminal panel keeps i
 
   const desktop = await mount('desktop')
   expect(await desktop.find({ type: 'Svg' })).toBeDefined()
-  expect(await desktop.find({ type: 'Text', text: /29% left/ })).toBeDefined()
-  expect(await desktop.find({ type: 'Text', text: /Pip/ })).toBeUndefined()
+  expect(await desktop.find({ type: 'Text', text: /29% restante/ })).toBeDefined()
+  expect(await desktop.find({ type: 'Text', text: /Pip/ })).toBeDefined()
   await desktop.unmount()
 
   const terminal = await mount('terminal')
@@ -113,4 +113,27 @@ test('the desktop panel draws vectors and has no pet; the terminal panel keeps i
   expect(await terminal.find({ type: 'Text', text: /█/ })).toBeDefined()
   expect(await terminal.find({ type: 'Text', text: /Pip/ })).toBeDefined()
   await terminal.unmount()
+})
+
+test('clicar no bichinho faz uma reação, em qualquer superfície', async ($, on) => {
+  // o relógio do teste começa na hora real, que é a que o painel usa para decidir o humor
+  mock.clock(on, { now: Date.now() })
+  on('session.usage', () => ({ value: USAGE }) as never)
+  on('prompt.submit', (_$, e) => e as never)
+  await $.prompt.submit({ text: 'oi' } as never)
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const pane = await $.ui.mount({
+      plugin: 'credits-bar',
+      surface,
+      component: 'Pane',
+      requestId: 'credits',
+      props: {}
+    } as never)
+    expect(await pane.find({ key: 'pet' })).toBeDefined()
+    await pane.press({ key: 'pet' })
+    // depois do clique ele fala uma das falas de reação e muda para o humor "brincando"
+    expect(await pane.find({ type: 'Text', text: /brincando/ })).toBeDefined()
+    await pane.unmount()
+  }
 })

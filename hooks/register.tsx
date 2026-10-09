@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
-import { PET_WIDTH, petMini, petSprite, petState } from './pet'
+import { PET_WIDTH, POKE_MS, petFloor, petMini, petStage, petState } from './pet'
 import { buildReport } from './report'
 import { barSvg, chartSvg, levelColor } from './svg'
 import { STRINGS } from './strings'
@@ -46,7 +46,13 @@ const tokens = atom({ plugin: 'credits-bar', key: 'tokens' } as const, { input: 
 const history = atom({ plugin: 'credits-bar', key: 'history' } as const, {})
 const tick = atom({ plugin: 'credits-bar', key: 'tick' } as const, 0)
 const models = atom({ plugin: 'credits-bar', key: 'models' } as const, {})
-const pet = atom({ plugin: 'credits-bar', key: 'pet' } as const, { working: false, lastActive: 0, partyUntil: 0 })
+const pet = atom({ plugin: 'credits-bar', key: 'pet' } as const, {
+  working: false,
+  lastActive: 0,
+  partyUntil: 0,
+  pokes: 0,
+  pokedUntil: 0
+})
 const petOn = atom({ plugin: 'credits-bar', key: 'petOn' } as const, true)
 const frame = atom({ plugin: 'credits-bar', key: 'frame' } as const, 0)
 
@@ -95,7 +101,7 @@ export const register: Register = (on, options) => {
 
     await update($, petOn, () => opts.pet)
     const started = await $.clock.now()
-    await update($, pet, () => ({ working: false, lastActive: started, partyUntil: 0 }))
+    await update($, pet, () => ({ working: false, lastActive: started, partyUntil: 0, pokes: 0, pokedUntil: 0 }))
 
     const stored = await $.store.get('history')
     if (stored && typeof stored === 'object') {
@@ -129,7 +135,7 @@ export const register: Register = (on, options) => {
     })
 
     // Unasked, the pane seats from 144 columns; below that the one-line band stands in.
-    void $.ui.open({ id: PANE, title: 'Credits' })
+    void $.ui.open({ id: PANE, title: str.title })
 
     return next(e)
   })
@@ -142,7 +148,7 @@ export const register: Register = (on, options) => {
       return { text: str.panelClosed }
     }
 
-    const opened = await $.ui.open({ id: PANE, title: 'Credits' })
+    const opened = await $.ui.open({ id: PANE, title: str.title })
 
     return { text: opened.isPlaced ? str.panelOpened : str.panelCannot }
   })
@@ -186,6 +192,7 @@ export const register: Register = (on, options) => {
           high: opts.alertHigh
         }),
         frame: await read($, frame),
+        pokes: mem.pokes,
         isPetOn: await read($, petOn)
       })
     }
@@ -282,6 +289,7 @@ export const register: Register = (on, options) => {
   on('turn.complete', async ($, e, next) => {
     const stamp = await $.clock.now()
     await update($, pet, p => ({
+      ...p,
       working: false,
       lastActive: stamp,
       partyUntil: e.reason === 'answer' ? stamp + 5000 : p.partyUntil
@@ -319,14 +327,14 @@ export const register: Register = (on, options) => {
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     draws[`pane@${e.surface}`] = (draws[`pane@${e.surface}`] ?? 0) + 1
     const ui = $.ui.resolve(e)
-    const { Box, Text } = ui
+    const { Box, Text, Button } = ui
     // Surfaces with a vector element (the desktop app, the editor, mobile) get smooth drawings;
-    // the terminal keeps its text. The vector panel has no pet, so it never reads the frame counter.
+    // the terminal keeps its text. The pet is text on every surface.
     const Svg = (ui as unknown as { Svg?: (props: Record<string, unknown>) => unknown }).Svg
     const isVector = e.surface !== 'terminal' && Svg !== undefined
     const snap = await read($, snapshot)
     const isPetOn = await read($, petOn)
-    const frameNo = isPetOn && !isVector ? await read($, frame) : 0
+    const frameNo = isPetOn ? await read($, frame) : 0
     const mem = await read($, pet)
 
     await read($, tick)
@@ -340,31 +348,44 @@ export const register: Register = (on, options) => {
       Math.max(0, ...(snap?.limits ?? []).map(l => l.percentUsed)),
       { low: opts.alertLow, high: opts.alertHigh }
     )
-    // The pet lives in the text panel (terminal) and in the band; the vector panel has none.
-    const petBlock = isPetOn && !isVector ? (
+    // O bichinho mora no rodapé do painel, em qualquer superfície; clicar nele faz uma reação.
+    const range = Math.max(0, Math.min(14, (e.viewport?.columns ?? 40) - 4 - PET_WIDTH))
+    const stage = petStage(mood, frameNo, range, mem.pokes)
+    const bubble =
+      mood === 'poked'
+        ? str.pokeBubbles[mem.pokes % str.pokeBubbles.length]
+        : str.bubbles[mood][Math.floor(now / 15_000) % str.bubbles[mood].length]
+    const onPoke = async () => {
+      const stamp = await $.clock.now()
+      await update($, pet, p => ({ ...p, pokes: p.pokes + 1, pokedUntil: stamp + POKE_MS, lastActive: stamp }))
+    }
+    const petBlock = isPetOn ? (
       <Box flexDirection="column">
+        <Text> </Text>
         {isCompact ? (
-          <Text>{`${petMini(mood, frameNo)}  ${opts.petName} · ${str.mood[mood]}`}</Text>
+          <Box>
+            <Button key="pet" plain label={petMini(mood, frameNo, mem.pokes)} onPress={onPoke} />
+            <Text dimColor>{`  ${opts.petName} · ${str.mood[mood]}`}</Text>
+          </Box>
         ) : (
           <Box flexDirection="column">
-            {petSprite(mood, frameNo, Math.max(0, Math.min(14, (e.viewport?.columns ?? 40) - 4 - PET_WIDTH))).map((line, i) => (
-              <Text key={i} color={opts.palette === 'mono' ? undefined : 'yellow'}>
-                {line}
-              </Text>
-            ))}
+            <Text dimColor>{stage.air || ' '}</Text>
+            <Box marginLeft={stage.x}>
+              <Button key="pet" plain label={stage.face} onPress={onPoke} />
+            </Box>
+            <Text dimColor>{petFloor(Math.max(8, Math.min(30, (e.viewport?.columns ?? 40) - 4)))}</Text>
             <Text dimColor>{` ${opts.petName} · ${str.mood[mood]}`}</Text>
-            <Text dimColor>{` » ${str.bubbles[mood][Math.floor(frameNo / 10) % str.bubbles[mood].length]}`}</Text>
+            <Text dimColor>{` » ${bubble}`}</Text>
           </Box>
         )}
-        <Text> </Text>
       </Box>
     ) : null
 
     if (snap === null) {
       return (
         <Box flexDirection="column">
-          {petBlock}
           <Text dimColor>{str.noReading}</Text>
+          {petBlock}
         </Box>
       )
     }
@@ -395,7 +416,6 @@ export const register: Register = (on, options) => {
 
     return (
       <Box flexDirection="column">
-        {petBlock}
         {snap.limits.length === 0 ? (
           <Text dimColor>{str.noLimit}</Text>
         ) : (
@@ -557,6 +577,8 @@ export const register: Register = (on, options) => {
             )}
           </Box>
         ) : null}
+
+        {petBlock}
       </Box>
     )
   })
@@ -585,7 +607,7 @@ export const register: Register = (on, options) => {
         label={tightest === null ? str.chipEmpty : str.chipLeft(Math.round(tightest))}
         onPress={async () => {
           if (await isPaneUp($)) await $.ui.close({ id: PANE })
-          else await $.ui.open({ id: PANE, title: 'Credits' })
+          else await $.ui.open({ id: PANE, title: str.title })
         }}
       />
     )
@@ -593,15 +615,17 @@ export const register: Register = (on, options) => {
     // The pet rides along, just left of the icon button.
     const isPetOn = await read($, petOn)
     const bandFrame = isPetOn ? await read($, frame) : 0
+    const bandMem = await read($, pet)
+    const bandPokes = bandMem.pokes
     const bandMood = petState(
-      await read($, pet),
+      bandMem,
       now,
       Math.max(0, ...(snap?.limits ?? []).map(l => l.percentUsed)),
       { low: opts.alertLow, high: opts.alertHigh }
     )
     const right = (
       <Box>
-        {isPetOn ? <Text>{`${petMini(bandMood, bandFrame)}  `}</Text> : null}
+        {isPetOn ? <Text>{`${petMini(bandMood, bandFrame, bandPokes)}  `}</Text> : null}
         {chip}
       </Box>
     )

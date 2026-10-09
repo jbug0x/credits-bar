@@ -45,14 +45,14 @@ test('paceNote ignores unknown windows and tiny usage', async () => {
 test('newAlerts fires once per threshold and window', async () => {
   const limits = [{ kind: 'five_hour', percentUsed: 82, resetsAt: 'A' }]
   const first = newAlerts(limits, new Set())
-  expect(first.messages).toEqual(['5h limit 82% used'])
+  expect(first.messages).toEqual(['Limite de 5h: 82% usado'])
   expect(newAlerts(limits, first.seen).messages).toEqual([])
 
   const higher = newAlerts([{ kind: 'five_hour', percentUsed: 96, resetsAt: 'A' }], first.seen)
-  expect(higher.messages).toEqual(['5h limit 96% used'])
+  expect(higher.messages).toEqual(['Limite de 5h: 96% usado'])
 
   const newWindow = newAlerts([{ kind: 'five_hour', percentUsed: 85, resetsAt: 'B' }], higher.seen)
-  expect(newWindow.messages).toEqual(['5h limit 85% used'])
+  expect(newWindow.messages).toEqual(['Limite de 5h: 85% usado'])
 })
 
 test('newAlerts honors custom thresholds and warns once when a window is on pace to run dry', async () => {
@@ -165,10 +165,10 @@ test('Portuguese labels, alerts and countdowns', async () => {
   expect(r.messages).toEqual(['Limite de 5h: 60% usado', 'Janela de 5h acaba em 1h, antes de resetar'])
   expect(resetsIn(new Date(NOW + 48 * 60000).toISOString(), NOW, 'pt')).toBe('reseta em 48m')
   expect(paceNote(limits[0]!, NOW, 'pt')).toBe('acaba em 1h')
-  expect(resolveOptions({ language: 'pt', dailyGoal: '5', sound: true })).toMatchObject({
-    language: 'pt',
+  expect(resolveOptions({ language: 'en', dailyGoal: '5', sound: true })).toMatchObject({
+    language: 'en',
     dailyGoal: 5,
     sound: true
   })
-  expect(resolveOptions({ language: 'fr' }).language).toBe('en')
+  expect(resolveOptions({ language: 'fr' }).language).toBe('pt')
 })

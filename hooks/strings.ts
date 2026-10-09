@@ -49,9 +49,12 @@ type Table = {
   cmdReport: string
   petOn: string
   petOff: string
-  mood: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party', string>
+  title: string
+  mood: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party' | 'poked', string>
   // what the pet mutters, a few per mood, rotating
   bubbles: Record<'idle' | 'sleep' | 'work' | 'tired' | 'scared' | 'party', string[]>
+  // a fala de cada reação ao clique, na mesma ordem das reações do bichinho
+  pokeBubbles: string[]
 }
 
 export const STRINGS: Record<Lang, Table> = {
@@ -101,7 +104,9 @@ export const STRINGS: Record<Lang, Table> = {
     cmdReport: 'Show the full usage summary as text (works on every surface)',
     petOn: 'The pet is back.',
     petOff: 'The pet went to nap. Run /credits-pet to bring it back.',
+    title: 'Credits',
     mood: {
+      poked: 'playing',
       idle: 'chilling',
       sleep: 'sleeping',
       work: 'working',
@@ -109,6 +114,7 @@ export const STRINGS: Record<Lang, Table> = {
       scared: 'panicking',
       party: 'celebrating'
     },
+    pokeBubbles: ['hehe, that tickles!', 'yay!', 'hi there!', 'aww, thanks!', 'whoa, dizzy...'],
     bubbles: {
       idle: ['all quiet in here', 'got any tasks for me?', 'watching the bars', 'psst, nice code'],
       sleep: ['zzz...', 'five more minutes', 'dreaming of green bars'],
@@ -164,7 +170,9 @@ export const STRINGS: Record<Lang, Table> = {
     cmdReport: 'Mostrar o resumo completo de uso em texto (funciona em qualquer superfície)',
     petOn: 'O bichinho voltou.',
     petOff: 'O bichinho foi tirar uma soneca. Use /credits-pet para chamá-lo de volta.',
+    title: 'Créditos',
     mood: {
+      poked: 'brincando',
       idle: 'de boa',
       sleep: 'dormindo',
       work: 'trabalhando',
@@ -172,6 +180,7 @@ export const STRINGS: Record<Lang, Table> = {
       scared: 'em pânico',
       party: 'comemorando'
     },
+    pokeBubbles: ['hihi, cócegas!', 'oba!', 'oi, oi!', 'ai, que fofo!', 'uiii, tontura...'],
     bubbles: {
       idle: ['tudo quieto por aqui', 'tem tarefa pra mim?', 'de olho nas barras', 'psiu, bom código'],
       sleep: ['zzz...', 'só mais cinco minutinhos', 'sonhando com barras verdes'],

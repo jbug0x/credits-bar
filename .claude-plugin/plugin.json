@@ -1,6 +1,6 @@
 {
   "name": "credits-bar",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A live usage panel for Claude Code with a little pet: limit bars, pace warning, daily goal, context, tokens, cost per project, history and CSV export. English and Portuguese.",
   "license": "MIT",
   "author": {
@@ -69,12 +69,12 @@
     "language": {
       "type": "string",
       "title": "Language",
-      "description": "Labels and messages: en or pt.",
+      "description": "Idioma dos rótulos e das mensagens: pt (português) ou en (inglês).",
       "options": [
         "en",
         "pt"
       ],
-      "default": "en"
+      "default": "pt"
     },
     "dailyGoal": {
       "type": "number",
@@ -103,7 +103,7 @@
     "pet": {
       "type": "boolean",
       "title": "Show the pet",
-      "description": "A little critter that naps, works, gets tired and celebrates, in the panel and next to the icon button.",
+      "description": "Um bichinho que cochila, trabalha, se cansa, comemora e reage ao clique, no rodapé do painel e ao lado do botão.",
       "default": true
     },
     "petName": {
